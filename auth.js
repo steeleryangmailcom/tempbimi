@@ -12,12 +12,12 @@
 // ============================================================
 const msalConfig = {
     auth: {
-        // Replace with your Application (client) ID from Azure Portal
-        clientId: "YOUR_CLIENT_ID_HERE",
+        // Application (client) ID from Azure Portal
+        clientId: "56e3ad46-70d5-4c67-9a34-4528826fe90b",
 
-        // Replace with your Directory (tenant) ID from Azure Portal
+        // Directory (tenant) ID from Azure Portal
         // Using tenant ID restricts login to only Solvenna.com users
-        authority: "https://login.microsoftonline.com/YOUR_TENANT_ID_HERE",
+        authority: "https://login.microsoftonline.com/73eda9f0-97b8-4dda-af52-6969663defef",
 
         // Must match the redirect URI registered in Azure Portal
         // Update this to your actual hosting URL
