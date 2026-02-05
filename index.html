@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Bowl Squares</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏈 Super Bowl Squares 🏈</h1>
+            <p class="subtitle">Super Bowl LIX - February 9, 2025</p>
+        </header>
+
+        <div class="controls">
+            <div class="team-setup">
+                <div class="team-input">
+                    <label for="team-afc">AFC Team (Top):</label>
+                    <input type="text" id="team-afc" placeholder="e.g., Chiefs" value="AFC">
+                </div>
+                <div class="team-input">
+                    <label for="team-nfc">NFC Team (Left):</label>
+                    <input type="text" id="team-nfc" placeholder="e.g., Eagles" value="NFC">
+                </div>
+                <button id="save-teams" class="btn btn-primary">Save Teams</button>
+            </div>
+
+            <div class="actions">
+                <button id="randomize-numbers" class="btn btn-warning">🎲 Randomize Numbers</button>
+                <button id="clear-numbers" class="btn btn-secondary">Clear Numbers</button>
+                <button id="reset-all" class="btn btn-danger">Reset All</button>
+                <button id="export-data" class="btn btn-info">📥 Export</button>
+                <button id="import-data" class="btn btn-info">📤 Import</button>
+                <input type="file" id="import-file" accept=".json" style="display: none;">
+            </div>
+        </div>
+
+        <div class="game-board-container">
+            <div class="team-label team-afc" id="afc-label">AFC</div>
+            <div class="game-board">
+                <div class="numbers-row" id="numbers-row">
+                    <div class="corner"></div>
+                    <!-- Numbers 0-9 will be inserted here -->
+                </div>
+                <div class="grid-container">
+                    <div class="numbers-col" id="numbers-col">
+                        <!-- Numbers 0-9 will be inserted here -->
+                    </div>
+                    <div class="grid" id="squares-grid">
+                        <!-- 100 squares will be inserted here -->
+                    </div>
+                </div>
+            </div>
+            <div class="team-label team-nfc" id="nfc-label">NFC</div>
+        </div>
+
+        <div class="score-section">
+            <h2>Game Scores</h2>
+            <div class="scores-grid">
+                <div class="score-quarter">
+                    <h3>Q1</h3>
+                    <div class="score-inputs">
+                        <input type="number" id="q1-afc" placeholder="AFC" min="0" max="99">
+                        <span>-</span>
+                        <input type="number" id="q1-nfc" placeholder="NFC" min="0" max="99">
+                    </div>
+                    <div class="quarter-winner" id="q1-winner"></div>
+                </div>
+                <div class="score-quarter">
+                    <h3>Q2 (Half)</h3>
+                    <div class="score-inputs">
+                        <input type="number" id="q2-afc" placeholder="AFC" min="0" max="99">
+                        <span>-</span>
+                        <input type="number" id="q2-nfc" placeholder="NFC" min="0" max="99">
+                    </div>
+                    <div class="quarter-winner" id="q2-winner"></div>
+                </div>
+                <div class="score-quarter">
+                    <h3>Q3</h3>
+                    <div class="score-inputs">
+                        <input type="number" id="q3-afc" placeholder="AFC" min="0" max="99">
+                        <span>-</span>
+                        <input type="number" id="q3-nfc" placeholder="NFC" min="0" max="99">
+                    </div>
+                    <div class="quarter-winner" id="q3-winner"></div>
+                </div>
+                <div class="score-quarter">
+                    <h3>Q4 (Final)</h3>
+                    <div class="score-inputs">
+                        <input type="number" id="q4-afc" placeholder="AFC" min="0" max="99">
+                        <span>-</span>
+                        <input type="number" id="q4-nfc" placeholder="NFC" min="0" max="99">
+                    </div>
+                    <div class="quarter-winner" id="q4-winner"></div>
+                </div>
+            </div>
+            <button id="update-scores" class="btn btn-primary">Update Scores & Find Winners</button>
+        </div>
+
+        <div class="stats-section">
+            <h2>Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number" id="squares-filled">0</span>
+                    <span class="stat-label">Squares Filled</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="squares-remaining">100</span>
+                    <span class="stat-label">Squares Remaining</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="unique-players">0</span>
+                    <span class="stat-label">Unique Players</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <h3>Legend</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color available"></div>
+                    <span>Available</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color taken"></div>
+                    <span>Taken</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color winner"></div>
+                    <span>Winner</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for entering player name -->
+    <div class="modal" id="player-modal">
+        <div class="modal-content">
+            <h3>Claim This Square</h3>
+            <p>Position: Row <span id="modal-row"></span>, Column <span id="modal-col"></span></p>
+            <input type="text" id="player-name-input" placeholder="Enter player name" maxlength="20">
+            <div class="modal-actions">
+                <button id="save-player" class="btn btn-primary">Save</button>
+                <button id="clear-square" class="btn btn-warning">Clear Square</button>
+                <button id="cancel-modal" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
