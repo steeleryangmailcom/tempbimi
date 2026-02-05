@@ -67,13 +67,18 @@ async function initializeFirebase() {
 
 // Save game data to Firebase
 async function saveToFirebase(data) {
-    if (!gameRef) return false;
+    if (!gameRef) {
+        console.error('Cannot save: Firebase gameRef not initialized');
+        return false;
+    }
 
     try {
+        console.log('Saving data to Firebase...');
         await gameRef.set({
             ...data,
             lastUpdated: firebase.database.ServerValue.TIMESTAMP
         });
+        console.log('Data saved to Firebase successfully');
         return true;
     } catch (error) {
         console.error("Error saving to Firebase:", error);
@@ -96,14 +101,25 @@ async function loadFromFirebase() {
 
 // Listen for real-time updates from Firebase
 function onFirebaseUpdate(callback) {
-    if (!gameRef) return null;
+    if (!gameRef) {
+        console.error('Firebase gameRef not initialized');
+        return null;
+    }
 
-    return gameRef.on('value', (snapshot) => {
+    console.log('Setting up Firebase real-time listener...');
+
+    // Listen for value changes
+    gameRef.on('value', (snapshot) => {
         const data = snapshot.val();
+        console.log('Firebase data received:', data ? 'data present' : 'no data');
         if (data) {
             callback(data);
         }
+    }, (error) => {
+        console.error('Firebase listener error:', error);
     });
+
+    return true;
 }
 
 // Stop listening for updates

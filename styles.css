@@ -888,6 +888,58 @@ header h1 {
     font-weight: bold;
 }
 
+/* Sync Status Indicator */
+.sync-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 8px 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+.sync-status-bar {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.sync-status-bar .sync-status {
+    margin-top: 0;
+}
+
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+}
+
+.status-dot.offline {
+    background: #f44336;
+    animation: none;
+}
+
+.status-dot.connecting {
+    background: #ff9800;
+}
+
+.status-dot.online {
+    background: #4caf50;
+    animation: none;
+}
+
+.status-text {
+    color: #ccc;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
 /* My Square Highlight */
 .square.my-square {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);

@@ -75,6 +75,9 @@ class SuperBowlSquares {
         // Cost per square
         this.costPerSquare = 5;
 
+        // Sync status elements
+        this.syncStatusElement = document.getElementById('sync-status');
+
         // Score displays (player page)
         this.scoreDisplays = {
             q1: document.getElementById('q1-score'),
@@ -788,6 +791,21 @@ class SuperBowlSquares {
         this.playerLimits = data.playerLimits || {};
     }
 
+    // Update sync status indicator
+    updateSyncStatus(status, message) {
+        if (!this.syncStatusElement) return;
+
+        const dot = this.syncStatusElement.querySelector('.status-dot');
+        const text = this.syncStatusElement.querySelector('.status-text');
+
+        if (dot) {
+            dot.className = 'status-dot ' + status;
+        }
+        if (text) {
+            text.textContent = message;
+        }
+    }
+
     // Handle real-time updates from Firebase
     onFirebaseDataUpdate(data) {
         // Don't update if modal is open (user is in the middle of an action)
@@ -797,13 +815,17 @@ class SuperBowlSquares {
 
         this.applyData(data);
         this.render();
+        this.updateSyncStatus('online', 'Synced with Firebase');
         console.log('Game updated from Firebase');
     }
 
     // Initialize Firebase connection
     async initFirebase() {
+        this.updateSyncStatus('connecting', 'Connecting to Firebase...');
+
         if (typeof initializeFirebase !== 'function') {
             console.log('Firebase not available, using localStorage only');
+            this.updateSyncStatus('offline', 'Local storage only');
             return;
         }
 
@@ -811,6 +833,7 @@ class SuperBowlSquares {
             const initialized = await initializeFirebase();
             if (initialized) {
                 this.useFirebase = true;
+                this.updateSyncStatus('connecting', 'Loading data...');
 
                 // Load initial data from Firebase
                 const firebaseData = await loadFromFirebase();
@@ -825,11 +848,15 @@ class SuperBowlSquares {
                 // Listen for real-time updates
                 onFirebaseUpdate((data) => this.onFirebaseDataUpdate(data));
 
+                this.updateSyncStatus('online', 'Connected to Firebase');
                 console.log('Firebase sync enabled - data will sync across all users');
+            } else {
+                this.updateSyncStatus('offline', 'Firebase not configured');
             }
         } catch (error) {
             console.error('Firebase initialization failed, using localStorage:', error);
             this.useFirebase = false;
+            this.updateSyncStatus('offline', 'Firebase error - using local');
         }
     }
 }
