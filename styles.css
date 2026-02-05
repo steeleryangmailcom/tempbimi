@@ -427,17 +427,26 @@ header h1 {
 }
 
 .modal-content p {
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     color: #aaa;
 }
 
-.modal-content input {
-    width: 100%;
-    padding: 15px;
-    border: none;
-    border-radius: 10px;
+.modal-user-name {
     font-size: 1.1rem;
-    margin-bottom: 20px;
+    color: #fff !important;
+}
+
+.modal-user-name strong {
+    color: #ffd700;
+}
+
+.modal-current-owner {
+    background: rgba(255, 193, 7, 0.2);
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    padding: 10px 15px;
+    color: #ffc107 !important;
+    font-size: 0.95rem;
 }
 
 .modal-actions {
@@ -445,6 +454,7 @@ header h1 {
     gap: 10px;
     justify-content: center;
     flex-wrap: wrap;
+    margin-top: 20px;
 }
 
 /* Responsive Design */

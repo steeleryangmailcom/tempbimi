@@ -41,7 +41,9 @@ class SuperBowlSquares {
         this.numbersRowElement = document.getElementById('numbers-row');
         this.numbersColElement = document.getElementById('numbers-col');
         this.modal = document.getElementById('player-modal');
-        this.playerNameInput = document.getElementById('player-name-input');
+        this.modalTitle = document.getElementById('modal-title');
+        this.modalPlayerName = document.getElementById('modal-player-name');
+        this.modalCurrentOwner = document.getElementById('modal-current-owner');
         this.modalRow = document.getElementById('modal-row');
         this.modalCol = document.getElementById('modal-col');
 
@@ -110,13 +112,6 @@ class SuperBowlSquares {
         this.modal.addEventListener('click', (e) => {
             if (e.target === this.modal) {
                 this.closeModal();
-            }
-        });
-
-        // Enter key in player name input
-        this.playerNameInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.savePlayer();
             }
         });
 
@@ -254,18 +249,42 @@ class SuperBowlSquares {
         this.uniquePlayersElement.textContent = uniquePlayers;
     }
 
+    // Get logged-in user's display name
+    getLoggedInUserName() {
+        if (typeof authManager !== 'undefined' && authManager.isLoggedIn()) {
+            return authManager.getDisplayName();
+        }
+        return 'Guest';
+    }
+
     // Open modal for a square
     openModal(index) {
         this.currentSquareIndex = index;
         const row = Math.floor(index / 10);
         const col = index % 10;
+        const currentOwner = this.squares[index];
+        const loggedInUser = this.getLoggedInUserName();
 
         this.modalRow.textContent = row + 1;
         this.modalCol.textContent = col + 1;
+        this.modalPlayerName.textContent = loggedInUser;
 
-        this.playerNameInput.value = this.squares[index] || '';
+        // Update modal based on square state
+        if (currentOwner) {
+            this.modalTitle.textContent = 'Square Already Claimed';
+            this.modalCurrentOwner.textContent = `Currently owned by: ${currentOwner}`;
+            this.modalCurrentOwner.style.display = 'block';
+            document.getElementById('save-player').style.display = 'none';
+            document.getElementById('clear-square').style.display = currentOwner === loggedInUser ? 'inline-block' : 'none';
+        } else {
+            this.modalTitle.textContent = 'Claim This Square';
+            this.modalCurrentOwner.textContent = '';
+            this.modalCurrentOwner.style.display = 'none';
+            document.getElementById('save-player').style.display = 'inline-block';
+            document.getElementById('clear-square').style.display = 'none';
+        }
+
         this.modal.classList.add('active');
-        this.playerNameInput.focus();
     }
 
     // Close modal
@@ -274,12 +293,12 @@ class SuperBowlSquares {
         this.currentSquareIndex = null;
     }
 
-    // Save player name from modal
+    // Save player name from modal (uses logged-in user's name)
     savePlayer() {
         if (this.currentSquareIndex === null) return;
 
-        const name = this.playerNameInput.value.trim();
-        if (name) {
+        const name = this.getLoggedInUserName();
+        if (name && name !== 'Guest') {
             this.squares[this.currentSquareIndex] = name;
             this.saveToStorage();
             this.render();

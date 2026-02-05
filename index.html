@@ -166,15 +166,16 @@
         </div>
     </div>
 
-    <!-- Modal for entering player name -->
+    <!-- Modal for claiming a square -->
     <div class="modal" id="player-modal">
         <div class="modal-content">
-            <h3>Claim This Square</h3>
+            <h3 id="modal-title">Claim This Square</h3>
             <p>Position: Row <span id="modal-row"></span>, Column <span id="modal-col"></span></p>
-            <input type="text" id="player-name-input" placeholder="Enter player name" maxlength="20">
+            <p class="modal-user-name">Claiming as: <strong id="modal-player-name"></strong></p>
+            <p id="modal-current-owner" class="modal-current-owner"></p>
             <div class="modal-actions">
-                <button id="save-player" class="btn btn-primary">Save</button>
-                <button id="clear-square" class="btn btn-warning">Clear Square</button>
+                <button id="save-player" class="btn btn-primary">Claim Square</button>
+                <button id="clear-square" class="btn btn-warning">Release Square</button>
                 <button id="cancel-modal" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
