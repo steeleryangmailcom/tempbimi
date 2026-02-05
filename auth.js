@@ -116,7 +116,12 @@ class AuthManager {
         }
 
         try {
-            const response = await this.msalInstance.loginPopup(loginRequest);
+            const popupRequest = {
+                ...loginRequest,
+                redirectUri: window.location.origin + window.location.pathname
+            };
+
+            const response = await this.msalInstance.loginPopup(popupRequest);
             this.account = response.account;
 
             // Verify the user is from solvenna.com
@@ -131,6 +136,11 @@ class AuthManager {
 
             return this.account;
         } catch (error) {
+            // Handle user cancellation gracefully
+            if (error.errorCode === 'user_cancelled') {
+                console.log("User cancelled login");
+                return null;
+            }
             console.error("Login error:", error);
             throw error;
         }
@@ -157,22 +167,33 @@ class AuthManager {
         }
 
         try {
-            // Clear local state first
+            // Get the account before clearing
+            const accountToLogout = this.account;
+            const config = getMsalConfig();
+
+            // Clear local state
             this.account = null;
+
+            // Clear session storage
+            sessionStorage.clear();
 
             if (this.onLogoutCallback) {
                 this.onLogoutCallback();
             }
 
-            // Logout from Microsoft
-            await this.msalInstance.logoutPopup({
-                account: this.msalInstance.getAccountByUsername(this.account?.username),
-                postLogoutRedirectUri: msalConfig.auth.postLogoutRedirectUri
-            });
+            // Logout from Microsoft if we had an account
+            if (accountToLogout) {
+                await this.msalInstance.logoutPopup({
+                    account: accountToLogout,
+                    postLogoutRedirectUri: config.auth.postLogoutRedirectUri,
+                    mainWindowRedirectUri: config.auth.postLogoutRedirectUri
+                });
+            }
         } catch (error) {
             console.error("Logout error:", error);
             // Even if logout fails, clear local state
             this.account = null;
+            sessionStorage.clear();
             if (this.onLogoutCallback) {
                 this.onLogoutCallback();
             }
@@ -374,10 +395,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Logout button click handler
     logoutButton.addEventListener('click', async () => {
         try {
+            logoutButton.disabled = true;
+            logoutButton.textContent = 'Signing out...';
+
+            // Clear auth session (but keep game data in localStorage)
+            sessionStorage.clear();
+
             await authManager.logout();
         } catch (error) {
             console.error("Logout error:", error);
         }
-        showLoginScreen();
+
+        // Force page reload for clean state
+        window.location.reload();
     });
 });
