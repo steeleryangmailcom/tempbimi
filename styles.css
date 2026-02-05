@@ -165,8 +165,9 @@ header h1 {
     justify-content: center;
     font-size: 1.5rem;
     font-weight: bold;
-    color: #e74c3c;
-    background: #f8f9fa;
+    color: #002244;
+    background: linear-gradient(135deg, #c60c30 0%, #b30000 100%);
+    color: #fff;
     margin: 1px;
     border-radius: 5px;
 }
@@ -184,7 +185,8 @@ header h1 {
 .numbers-col .number-cell {
     width: 50px;
     height: 60px;
-    color: #3498db;
+    background: linear-gradient(135deg, #69be28 0%, #4a9e1c 100%);
+    color: #fff;
 }
 
 .grid {
@@ -731,3 +733,371 @@ header h1 {
         padding: 25px;
     }
 }
+
+/* ================================================
+   NEW STYLES FOR TEAM LOGOS AND LAYOUT
+   ================================================ */
+
+/* Game Board Wrapper */
+.game-board-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+/* Team Header (AFC - Top) */
+.team-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px 30px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.afc-header {
+    background: linear-gradient(135deg, #002244 0%, #c60c30 100%);
+}
+
+.team-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+}
+
+.team-name {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Game Board with NFC Sidebar */
+.game-board-with-nfc {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+/* Team Sidebar (NFC - Left) */
+.team-sidebar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 20px 15px;
+    border-radius: 10px;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+}
+
+.nfc-sidebar {
+    background: linear-gradient(135deg, #002244 0%, #69be28 100%);
+}
+
+.team-sidebar .team-logo {
+    transform: rotate(180deg);
+    writing-mode: horizontal-tb;
+}
+
+.team-sidebar .team-name {
+    font-size: 1.1rem;
+}
+
+/* Player Info Bar */
+.player-info-bar {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 15px 25px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.squares-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.squares-info span {
+    color: #ccc;
+}
+
+.squares-info strong {
+    color: #ffd700;
+    font-size: 1.1rem;
+}
+
+.separator {
+    color: #666;
+}
+
+/* My Square Highlight */
+.square.my-square {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #5a4fcf;
+    color: #fff;
+}
+
+.legend-color.my-square {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #5a4fcf;
+}
+
+/* Score Display (Player View) */
+.score-display {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+    padding: 10px;
+}
+
+/* Modal Limit Warning */
+.modal-limit-warning {
+    background: rgba(220, 53, 69, 0.2);
+    border: 1px solid #dc3545;
+    border-radius: 8px;
+    padding: 10px 15px;
+    color: #dc3545 !important;
+    font-size: 0.95rem;
+}
+
+.modal-limit-warning.info {
+    background: rgba(23, 162, 184, 0.2);
+    border-color: #17a2b8;
+    color: #17a2b8 !important;
+}
+
+/* ================================================
+   ADMIN STYLES
+   ================================================ */
+
+.admin-badge {
+    background: linear-gradient(135deg, #ffd700 0%, #ffb700 100%);
+    color: #333;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.admin-controls {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 25px;
+    margin-bottom: 30px;
+}
+
+.admin-controls h2 {
+    color: #ffd700;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.control-section {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.control-section:last-child {
+    margin-bottom: 0;
+}
+
+.control-section h3 {
+    color: #fff;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+}
+
+.help-text {
+    color: #aaa;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+/* Limit Controls */
+.limit-control {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.limit-control label {
+    color: #ccc;
+}
+
+.limit-control input {
+    width: 80px;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    text-align: center;
+}
+
+/* Player Limits Table */
+.player-limits-table {
+    margin-bottom: 20px;
+    overflow-x: auto;
+}
+
+.limits-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.limits-table th,
+.limits-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.limits-table th {
+    background: rgba(0, 0, 0, 0.3);
+    color: #ffd700;
+    font-weight: 600;
+}
+
+.limits-table td {
+    color: #fff;
+}
+
+.limits-table tr:last-child td {
+    border-bottom: none;
+}
+
+.limit-input {
+    width: 70px;
+    padding: 6px 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    text-align: center;
+}
+
+.custom-badge {
+    display: inline-block;
+    background: #17a2b8;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    margin-left: 8px;
+    text-transform: uppercase;
+}
+
+.no-players {
+    color: #888;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Add Player Limit */
+.add-player-limit {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding-top: 15px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.add-player-limit input[type="text"] {
+    flex: 1;
+    min-width: 150px;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.add-player-limit input[type="number"] {
+    width: 80px;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    text-align: center;
+}
+
+/* Responsive for Team Layout */
+@media (max-width: 900px) {
+    .game-board-with-nfc {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .team-sidebar {
+        writing-mode: horizontal-tb;
+        transform: none;
+        flex-direction: row;
+        padding: 15px 25px;
+        margin-bottom: 15px;
+    }
+
+    .team-sidebar .team-logo {
+        transform: none;
+    }
+
+    .team-header .team-logo,
+    .team-sidebar .team-logo {
+        width: 50px;
+        height: 50px;
+    }
+
+    .team-name {
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .team-header,
+    .team-sidebar {
+        padding: 10px 20px;
+    }
+
+    .team-header .team-logo,
+    .team-sidebar .team-logo {
+        width: 40px;
+        height: 40px;
+    }
+
+    .team-name {
+        font-size: 1rem;
+    }
+
+    .admin-controls {
+        padding: 15px;
+    }
+
+    .control-section {
+        padding: 15px;
+    }
+
+    .limit-control {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .add-player-limit {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .add-player-limit input[type="text"] {
+        min-width: auto;
+    }
+}
+

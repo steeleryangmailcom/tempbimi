@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Bowl Squares - Solvenna</title>
+    <title>Super Bowl Squares - Admin</title>
     <link rel="stylesheet" href="styles.css">
     <!-- Microsoft Authentication Library (MSAL) -->
     <script src="https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
@@ -13,9 +13,9 @@
     <div class="login-screen" id="login-screen">
         <div class="login-container">
             <h1>Super Bowl Squares</h1>
-            <p class="subtitle">Super Bowl LIX - February 9, 2025</p>
+            <p class="subtitle">Admin Panel</p>
             <div class="login-box">
-                <p>Sign in with your Solvenna account to participate</p>
+                <p>Sign in with your Solvenna account</p>
                 <button id="login-button" class="btn btn-microsoft">
                     <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21">
                         <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
@@ -35,23 +35,52 @@
         <header>
             <div class="header-top">
                 <div class="user-info" id="user-info">
+                    <span class="admin-badge">ADMIN</span>
                     <span class="user-name" id="user-name"></span>
                     <span class="user-email" id="user-email"></span>
                     <button id="logout-button" class="btn btn-secondary btn-small">Sign Out</button>
                 </div>
             </div>
-            <h1>Super Bowl Squares</h1>
+            <h1>Super Bowl Squares - Admin</h1>
             <p class="subtitle">Super Bowl LIX - February 9, 2025</p>
         </header>
 
-        <!-- Player Info Bar -->
-        <div class="player-info-bar">
-            <div class="squares-info">
-                <span>Your Squares: <strong id="my-squares-count">0</strong></span>
-                <span class="separator">|</span>
-                <span>Limit: <strong id="my-squares-limit">5</strong></span>
-                <span class="separator">|</span>
-                <span>Remaining: <strong id="my-squares-remaining">5</strong></span>
+        <!-- Admin Controls -->
+        <div class="admin-controls">
+            <h2>Admin Controls</h2>
+
+            <div class="control-section">
+                <h3>Game Management</h3>
+                <div class="actions">
+                    <button id="randomize-numbers" class="btn btn-warning">Randomize Numbers</button>
+                    <button id="clear-numbers" class="btn btn-secondary">Clear Numbers</button>
+                    <button id="reset-all" class="btn btn-danger">Reset All</button>
+                    <button id="export-data" class="btn btn-info">Export Data</button>
+                    <button id="import-data" class="btn btn-info">Import Data</button>
+                    <input type="file" id="import-file" accept=".json" style="display: none;">
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>Default Square Limit</h3>
+                <div class="limit-control">
+                    <label for="default-limit">Default squares per player:</label>
+                    <input type="number" id="default-limit" min="1" max="100" value="5">
+                    <button id="save-default-limit" class="btn btn-primary">Save Default</button>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>Player Limits</h3>
+                <p class="help-text">Adjust individual player limits. Players can purchase more squares by increasing their limit.</p>
+                <div class="player-limits-table" id="player-limits-table">
+                    <!-- Player limits will be inserted here -->
+                </div>
+                <div class="add-player-limit">
+                    <input type="text" id="new-player-name" placeholder="Player name (exact match)">
+                    <input type="number" id="new-player-limit" min="1" max="100" value="10" placeholder="Limit">
+                    <button id="add-player-limit" class="btn btn-primary">Add/Update Limit</button>
+                </div>
             </div>
         </div>
 
@@ -88,28 +117,45 @@
 
         <div class="score-section">
             <h2>Game Scores</h2>
-            <div class="scores-grid scores-display">
+            <div class="scores-grid">
                 <div class="score-quarter">
                     <h3>Q1</h3>
-                    <div class="score-display" id="q1-score">- vs -</div>
+                    <div class="score-inputs">
+                        <input type="number" id="q1-afc" placeholder="NE" min="0" max="99">
+                        <span>-</span>
+                        <input type="number" id="q1-nfc" placeholder="SEA" min="0" max="99">
+                    </div>
                     <div class="quarter-winner" id="q1-winner"></div>
                 </div>
                 <div class="score-quarter">
                     <h3>Q2 (Half)</h3>
-                    <div class="score-display" id="q2-score">- vs -</div>
+                    <div class="score-inputs">
+                        <input type="number" id="q2-afc" placeholder="NE" min="0" max="99">
+                        <span>-</span>
+                        <input type="number" id="q2-nfc" placeholder="SEA" min="0" max="99">
+                    </div>
                     <div class="quarter-winner" id="q2-winner"></div>
                 </div>
                 <div class="score-quarter">
                     <h3>Q3</h3>
-                    <div class="score-display" id="q3-score">- vs -</div>
+                    <div class="score-inputs">
+                        <input type="number" id="q3-afc" placeholder="NE" min="0" max="99">
+                        <span>-</span>
+                        <input type="number" id="q3-nfc" placeholder="SEA" min="0" max="99">
+                    </div>
                     <div class="quarter-winner" id="q3-winner"></div>
                 </div>
                 <div class="score-quarter">
                     <h3>Q4 (Final)</h3>
-                    <div class="score-display" id="q4-score">- vs -</div>
+                    <div class="score-inputs">
+                        <input type="number" id="q4-afc" placeholder="NE" min="0" max="99">
+                        <span>-</span>
+                        <input type="number" id="q4-nfc" placeholder="SEA" min="0" max="99">
+                    </div>
                     <div class="quarter-winner" id="q4-winner"></div>
                 </div>
             </div>
+            <button id="update-scores" class="btn btn-primary">Update Scores & Find Winners</button>
         </div>
 
         <div class="stats-section">
@@ -142,10 +188,6 @@
                     <span>Taken</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color my-square"></div>
-                    <span>Your Square</span>
-                </div>
-                <div class="legend-item">
                     <div class="legend-color winner"></div>
                     <span>Winner</span>
                 </div>
@@ -172,8 +214,8 @@
     <script src="auth.js"></script>
     <script src="app.js"></script>
     <script>
-        // Player mode - no admin controls
-        window.isAdminMode = false;
+        // Admin mode - full controls
+        window.isAdminMode = true;
     </script>
 </body>
 </html>
