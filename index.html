@@ -3,12 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Bowl Squares</title>
+    <title>Super Bowl Squares - Solvenna</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Microsoft Authentication Library (MSAL) -->
+    <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 </head>
 <body>
-    <div class="container">
+    <!-- Login Screen -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-container">
+            <h1>🏈 Super Bowl Squares 🏈</h1>
+            <p class="subtitle">Super Bowl LIX - February 9, 2025</p>
+            <div class="login-box">
+                <p>Sign in with your Solvenna account to participate</p>
+                <button id="login-button" class="btn btn-microsoft">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21">
+                        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+                    </svg>
+                    Sign in with Microsoft
+                </button>
+                <p class="login-note">Only @solvenna.com accounts are allowed</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application (hidden until login) -->
+    <div class="container" id="main-app" style="display: none;">
         <header>
+            <div class="header-top">
+                <div class="user-info" id="user-info">
+                    <span class="user-name" id="user-name"></span>
+                    <span class="user-email" id="user-email"></span>
+                    <button id="logout-button" class="btn btn-secondary btn-small">Sign Out</button>
+                </div>
+            </div>
             <h1>🏈 Super Bowl Squares 🏈</h1>
             <p class="subtitle">Super Bowl LIX - February 9, 2025</p>
         </header>
@@ -149,6 +180,7 @@
         </div>
     </div>
 
+    <script src="auth.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
