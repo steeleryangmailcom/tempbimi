@@ -86,17 +86,31 @@ class AuthManager {
             // Handle redirect response (if returning from login)
             const response = await this.msalInstance.handleRedirectPromise();
             if (response) {
-                this.account = response.account;
-                if (this.onLoginCallback) {
-                    this.onLoginCallback(this.account);
+                // Verify the user is from solvenna.com
+                if (!this.isValidDomain(response.account.username)) {
+                    // Clear the invalid account and show error
+                    sessionStorage.clear();
+                    this.account = null;
+                    alert("Only @solvenna.com accounts are allowed.");
+                } else {
+                    this.account = response.account;
+                    if (this.onLoginCallback) {
+                        this.onLoginCallback(this.account);
+                    }
                 }
             } else {
                 // Check if user is already logged in
                 const accounts = this.msalInstance.getAllAccounts();
                 if (accounts.length > 0) {
-                    this.account = accounts[0];
-                    if (this.onLoginCallback) {
-                        this.onLoginCallback(this.account);
+                    // Verify domain for existing session too
+                    if (this.isValidDomain(accounts[0].username)) {
+                        this.account = accounts[0];
+                        if (this.onLoginCallback) {
+                            this.onLoginCallback(this.account);
+                        }
+                    } else {
+                        // Clear invalid account
+                        sessionStorage.clear();
                     }
                 }
             }
@@ -109,55 +123,41 @@ class AuthManager {
         }
     }
 
-    // Login with popup (preferred for SPA)
-    async loginPopup() {
+    // Check if running in a popup or iframe
+    isInPopupOrIframe() {
+        try {
+            return window.opener !== null || window.self !== window.top;
+        } catch (e) {
+            return true; // If we can't access, assume we're in restricted context
+        }
+    }
+
+    // Login - uses redirect method for reliability
+    async login() {
         if (!this.isInitialized) {
             throw new Error("Auth not initialized. Call initialize() first.");
         }
 
         try {
-            const popupRequest = {
+            // Always use redirect for most reliable behavior
+            await this.msalInstance.loginRedirect({
                 ...loginRequest,
                 redirectUri: window.location.origin + window.location.pathname
-            };
-
-            const response = await this.msalInstance.loginPopup(popupRequest);
-            this.account = response.account;
-
-            // Verify the user is from solvenna.com
-            if (!this.isValidDomain(this.account.username)) {
-                await this.logout();
-                throw new Error("Only @solvenna.com accounts are allowed.");
-            }
-
-            if (this.onLoginCallback) {
-                this.onLoginCallback(this.account);
-            }
-
-            return this.account;
+            });
         } catch (error) {
-            // Handle user cancellation gracefully
-            if (error.errorCode === 'user_cancelled') {
-                console.log("User cancelled login");
-                return null;
-            }
             console.error("Login error:", error);
             throw error;
         }
     }
 
+    // Alias for backward compatibility
+    async loginPopup() {
+        return this.login();
+    }
+
     // Login with redirect (alternative method)
     async loginRedirect() {
-        if (!this.isInitialized) {
-            throw new Error("Auth not initialized. Call initialize() first.");
-        }
-
-        try {
-            await this.msalInstance.loginRedirect(loginRequest);
-        } catch (error) {
-            console.error("Login redirect error:", error);
-            throw error;
-        }
+        return this.login();
     }
 
     // Logout
@@ -181,22 +181,19 @@ class AuthManager {
                 this.onLogoutCallback();
             }
 
-            // Logout from Microsoft if we had an account
+            // Logout from Microsoft using redirect (more reliable than popup)
             if (accountToLogout) {
-                await this.msalInstance.logoutPopup({
+                await this.msalInstance.logoutRedirect({
                     account: accountToLogout,
-                    postLogoutRedirectUri: config.auth.postLogoutRedirectUri,
-                    mainWindowRedirectUri: config.auth.postLogoutRedirectUri
+                    postLogoutRedirectUri: config.auth.postLogoutRedirectUri
                 });
             }
         } catch (error) {
             console.error("Logout error:", error);
-            // Even if logout fails, clear local state
+            // Even if logout fails, clear local state and reload
             this.account = null;
             sessionStorage.clear();
-            if (this.onLogoutCallback) {
-                this.onLogoutCallback();
-            }
+            window.location.reload();
         }
     }
 
@@ -374,11 +371,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     loginButton.addEventListener('click', async () => {
         try {
             loginButton.disabled = true;
-            loginButton.textContent = 'Signing in...';
-            await authManager.loginPopup();
+            loginButton.textContent = 'Redirecting to Microsoft...';
+            // This will redirect the page to Microsoft login
+            await authManager.login();
         } catch (error) {
+            // Only shows if redirect fails immediately
             alert(error.message || "Login failed. Please try again.");
-        } finally {
             loginButton.disabled = false;
             loginButton.innerHTML = `
                 <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21">
@@ -397,16 +395,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             logoutButton.disabled = true;
             logoutButton.textContent = 'Signing out...';
-
-            // Clear auth session (but keep game data in localStorage)
-            sessionStorage.clear();
-
+            // This will redirect the page for logout
             await authManager.logout();
         } catch (error) {
             console.error("Logout error:", error);
+            // Only reached if redirect fails
+            window.location.reload();
         }
-
-        // Force page reload for clean state
-        window.location.reload();
     });
 });
