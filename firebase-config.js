@@ -18,13 +18,13 @@
 // ============================================================
 
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT_ID.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyBN1q71-11-3S27FrXmR7EdPsfssgmOQr4",
+    authDomain: "superbowl-squares-38d85.firebaseapp.com",
+    databaseURL: "https://superbowl-squares-38d85-default-rtdb.firebaseio.com",
+    projectId: "superbowl-squares-38d85",
+    storageBucket: "superbowl-squares-38d85.firebasestorage.app",
+    messagingSenderId: "515192815611",
+    appId: "1:515192815611:web:1245bb6ee5d9d75ab7955e"
 };
 
 // ============================================================
