@@ -762,9 +762,20 @@ class SuperBowlSquares {
 
     // Apply data from any source (localStorage or Firebase)
     applyData(data) {
-        this.squares = data.squares || Array(100).fill(null);
-        this.rowNumbers = data.rowNumbers || Array(10).fill(null);
-        this.colNumbers = data.colNumbers || Array(10).fill(null);
+        if (!data || typeof data !== 'object') {
+            console.warn('Invalid data received, ignoring');
+            return;
+        }
+
+        // Ensure squares is a valid array of 100 elements
+        if (Array.isArray(data.squares) && data.squares.length === 100) {
+            this.squares = data.squares;
+        } else if (!this.squares || this.squares.length !== 100) {
+            this.squares = Array(100).fill(null);
+        }
+
+        this.rowNumbers = Array.isArray(data.rowNumbers) ? data.rowNumbers : Array(10).fill(null);
+        this.colNumbers = Array.isArray(data.colNumbers) ? data.colNumbers : Array(10).fill(null);
         this.teams = data.teams || { afc: 'New England Patriots', nfc: 'Seattle Seahawks' };
         this.scores = data.scores || {
             q1: { afc: null, nfc: null },
@@ -796,24 +807,29 @@ class SuperBowlSquares {
             return;
         }
 
-        const initialized = await initializeFirebase();
-        if (initialized) {
-            this.useFirebase = true;
+        try {
+            const initialized = await initializeFirebase();
+            if (initialized) {
+                this.useFirebase = true;
 
-            // Load initial data from Firebase
-            const firebaseData = await loadFromFirebase();
-            if (firebaseData) {
-                this.applyData(firebaseData);
-                this.render();
-            } else {
-                // If Firebase is empty, push current localStorage data
-                this.saveToStorage();
+                // Load initial data from Firebase
+                const firebaseData = await loadFromFirebase();
+                if (firebaseData) {
+                    this.applyData(firebaseData);
+                    this.render();
+                } else {
+                    // If Firebase is empty, push current localStorage data
+                    this.saveToStorage();
+                }
+
+                // Listen for real-time updates
+                onFirebaseUpdate((data) => this.onFirebaseDataUpdate(data));
+
+                console.log('Firebase sync enabled - data will sync across all users');
             }
-
-            // Listen for real-time updates
-            onFirebaseUpdate((data) => this.onFirebaseDataUpdate(data));
-
-            console.log('Firebase sync enabled - data will sync across all users');
+        } catch (error) {
+            console.error('Firebase initialization failed, using localStorage:', error);
+            this.useFirebase = false;
         }
     }
 }
