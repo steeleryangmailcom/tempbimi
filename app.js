@@ -746,7 +746,21 @@ class SuperBowlSquares {
 
         // Save to Firebase if available
         if (this.useFirebase && typeof saveToFirebase === 'function') {
-            saveToFirebase(data);
+            console.log('useFirebase is true, saving to Firebase...');
+            saveToFirebase(data).then(saved => {
+                if (saved) {
+                    console.log('Firebase save successful');
+                    this.updateSyncStatus('online', 'Synced with Firebase');
+                } else {
+                    console.error('Firebase save returned false');
+                    this.updateSyncStatus('offline', 'Sync failed');
+                }
+            }).catch(err => {
+                console.error('Firebase save error:', err);
+                this.updateSyncStatus('offline', 'Sync error');
+            });
+        } else {
+            console.log('Firebase not available: useFirebase=' + this.useFirebase);
         }
     }
 
@@ -808,15 +822,20 @@ class SuperBowlSquares {
 
     // Handle real-time updates from Firebase
     onFirebaseDataUpdate(data) {
+        console.log('=== Firebase Update Received ===');
+        const filledSquares = data.squares ? data.squares.filter(s => s !== null).length : 0;
+        console.log('Filled squares in update:', filledSquares);
+
         // Don't update if modal is open (user is in the middle of an action)
         if (this.modal && this.modal.classList.contains('active')) {
+            console.log('Modal open, skipping update');
             return;
         }
 
         this.applyData(data);
         this.render();
-        this.updateSyncStatus('online', 'Synced with Firebase');
-        console.log('Game updated from Firebase');
+        this.updateSyncStatus('online', 'Synced (' + filledSquares + ' squares filled)');
+        console.log('UI updated from Firebase');
     }
 
     // Initialize Firebase connection
