@@ -64,6 +64,10 @@ class SuperBowlSquares {
         this.mySquaresCountElement = document.getElementById('my-squares-count');
         this.mySquaresLimitElement = document.getElementById('my-squares-limit');
         this.mySquaresRemainingElement = document.getElementById('my-squares-remaining');
+        this.myInvestmentElement = document.getElementById('my-investment');
+
+        // Cost per square
+        this.costPerSquare = 5;
 
         // Score displays (player page)
         this.scoreDisplays = {
@@ -180,10 +184,14 @@ class SuperBowlSquares {
         const count = this.countPlayerSquares(playerName);
         const limit = this.getPlayerLimit(playerName);
         const remaining = Math.max(0, limit - count);
+        const investment = count * this.costPerSquare;
 
         this.mySquaresCountElement.textContent = count;
         this.mySquaresLimitElement.textContent = limit;
         this.mySquaresRemainingElement.textContent = remaining;
+        if (this.myInvestmentElement) {
+            this.myInvestmentElement.textContent = '$' + investment;
+        }
     }
 
     // Render row and column numbers

@@ -836,6 +836,58 @@ header h1 {
     color: #666;
 }
 
+/* Rules Section */
+.rules-section {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 20px 25px;
+    margin-bottom: 25px;
+    border-left: 4px solid #ffd700;
+}
+
+.rules-section h2 {
+    color: #ffd700;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+}
+
+.rules-content ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.rules-content li {
+    padding: 8px 0;
+    color: #ddd;
+    font-size: 0.95rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.rules-content li:last-child {
+    border-bottom: none;
+}
+
+.rules-content li::before {
+    content: "\2022";
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.rules-content li strong {
+    color: #fff;
+}
+
+.investment-highlight {
+    color: #4caf50 !important;
+    font-weight: bold;
+}
+
 /* My Square Highlight */
 .square.my-square {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
