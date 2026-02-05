@@ -10,51 +10,55 @@
 // ============================================================
 // CONFIGURATION - UPDATE THESE VALUES WITH YOUR AZURE AD APP
 // ============================================================
-const msalConfig = {
-    auth: {
-        // Application (client) ID from Azure Portal
-        clientId: "56e3ad46-70d5-4c67-9a34-4528826fe90b",
 
-        // Directory (tenant) ID from Azure Portal
-        // Using tenant ID restricts login to only Solvenna.com users
-        authority: "https://login.microsoftonline.com/73eda9f0-97b8-4dda-af52-6969663defef",
+// Function to build MSAL config (deferred to avoid referencing msal before it loads)
+function getMsalConfig() {
+    return {
+        auth: {
+            // Application (client) ID from Azure Portal
+            clientId: "56e3ad46-70d5-4c67-9a34-4528826fe90b",
 
-        // Must match the redirect URI registered in Azure Portal
-        // Update this to your actual hosting URL
-        redirectUri: window.location.origin + window.location.pathname,
+            // Directory (tenant) ID from Azure Portal
+            // Using tenant ID restricts login to only Solvenna.com users
+            authority: "https://login.microsoftonline.com/73eda9f0-97b8-4dda-af52-6969663defef",
 
-        // Where to redirect after logout
-        postLogoutRedirectUri: window.location.origin + window.location.pathname,
-    },
-    cache: {
-        // Stores auth state in sessionStorage (cleared when browser closes)
-        // Use "localStorage" if you want users to stay logged in
-        cacheLocation: "sessionStorage",
-        storeAuthStateInCookie: false,
-    },
-    system: {
-        loggerOptions: {
-            loggerCallback: (level, message, containsPii) => {
-                if (containsPii) return;
-                switch (level) {
-                    case msal.LogLevel.Error:
-                        console.error(message);
-                        break;
-                    case msal.LogLevel.Warning:
-                        console.warn(message);
-                        break;
-                    case msal.LogLevel.Info:
-                        console.info(message);
-                        break;
-                    case msal.LogLevel.Verbose:
-                        console.debug(message);
-                        break;
-                }
-            },
-            logLevel: msal.LogLevel.Warning,
+            // Must match the redirect URI registered in Azure Portal
+            // Update this to your actual hosting URL
+            redirectUri: window.location.origin + window.location.pathname,
+
+            // Where to redirect after logout
+            postLogoutRedirectUri: window.location.origin + window.location.pathname,
+        },
+        cache: {
+            // Stores auth state in sessionStorage (cleared when browser closes)
+            // Use "localStorage" if you want users to stay logged in
+            cacheLocation: "sessionStorage",
+            storeAuthStateInCookie: false,
+        },
+        system: {
+            loggerOptions: {
+                loggerCallback: (level, message, containsPii) => {
+                    if (containsPii) return;
+                    switch (level) {
+                        case msal.LogLevel.Error:
+                            console.error(message);
+                            break;
+                        case msal.LogLevel.Warning:
+                            console.warn(message);
+                            break;
+                        case msal.LogLevel.Info:
+                            console.info(message);
+                            break;
+                        case msal.LogLevel.Verbose:
+                            console.debug(message);
+                            break;
+                    }
+                },
+                logLevel: msal.LogLevel.Warning,
+            }
         }
-    }
-};
+    };
+}
 
 // Scopes for the token request
 const loginRequest = {
@@ -76,7 +80,7 @@ class AuthManager {
     // Initialize MSAL instance
     async initialize() {
         try {
-            this.msalInstance = new msal.PublicClientApplication(msalConfig);
+            this.msalInstance = new msal.PublicClientApplication(getMsalConfig());
             await this.msalInstance.initialize();
 
             // Handle redirect response (if returning from login)
@@ -251,9 +255,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     const userNameElement = document.getElementById('user-name');
     const userEmailElement = document.getElementById('user-email');
 
+    // Check if MSAL library is loaded
+    if (typeof msal === 'undefined') {
+        console.error("MSAL library failed to load");
+        loginScreen.innerHTML = `
+            <div class="login-container">
+                <h1>🏈 Super Bowl Squares 🏈</h1>
+                <p class="subtitle">Super Bowl LIX - February 9, 2025</p>
+                <div class="login-box">
+                    <div class="config-warning">
+                        <h3>⚠️ Authentication Library Failed to Load</h3>
+                        <p>The Microsoft authentication library could not be loaded. Please check your internet connection and refresh the page.</p>
+                    </div>
+                    <button onclick="location.reload()" class="btn btn-primary">Refresh Page</button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+
     // Check if MSAL is configured
-    const isConfigured = msalConfig.auth.clientId !== "YOUR_CLIENT_ID_HERE" &&
-                         !msalConfig.auth.authority.includes("YOUR_TENANT_ID_HERE");
+    const config = getMsalConfig();
+    const isConfigured = config.auth.clientId !== "YOUR_CLIENT_ID_HERE" &&
+                         !config.auth.authority.includes("YOUR_TENANT_ID_HERE");
 
     if (!isConfigured) {
         // Show warning and allow access without login for development
