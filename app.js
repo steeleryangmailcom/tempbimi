@@ -232,6 +232,9 @@ class SuperBowlSquares {
         this.gridElement.innerHTML = '';
         const loggedInUser = this.getLoggedInUserName();
 
+        // Get unique players and assign colors
+        const playerColors = this.getPlayerColors();
+
         for (let i = 0; i < 100; i++) {
             const square = document.createElement('div');
             square.className = 'square';
@@ -244,8 +247,15 @@ class SuperBowlSquares {
                 square.classList.add('taken');
                 square.textContent = this.squares[i];
 
-                // Highlight user's own squares
-                if (this.squares[i] === loggedInUser) {
+                // Apply player-specific color
+                const playerName = this.squares[i];
+                if (playerColors[playerName]) {
+                    square.style.background = playerColors[playerName].gradient;
+                    square.style.borderColor = playerColors[playerName].border;
+                }
+
+                // Highlight user's own squares with a special indicator
+                if (playerName === loggedInUser) {
                     square.classList.add('my-square');
                 }
             }
@@ -258,6 +268,82 @@ class SuperBowlSquares {
             square.addEventListener('click', () => this.openModal(i));
             this.gridElement.appendChild(square);
         }
+
+        // Update player legend
+        this.renderPlayerLegend(playerColors);
+    }
+
+    // Generate consistent colors for each player based on their name
+    getPlayerColors() {
+        const players = [...new Set(this.squares.filter(s => s !== null))];
+        const colors = {};
+
+        // Predefined color palette with good contrast
+        const palette = [
+            { hue: 210, name: 'blue' },      // Blue
+            { hue: 150, name: 'green' },     // Green
+            { hue: 280, name: 'purple' },    // Purple
+            { hue: 30, name: 'orange' },     // Orange
+            { hue: 340, name: 'pink' },      // Pink
+            { hue: 180, name: 'teal' },      // Teal
+            { hue: 60, name: 'yellow' },     // Yellow
+            { hue: 0, name: 'red' },         // Red
+            { hue: 240, name: 'indigo' },    // Indigo
+            { hue: 120, name: 'lime' },      // Lime
+        ];
+
+        players.forEach((player, index) => {
+            const colorIndex = index % palette.length;
+            const hue = palette[colorIndex].hue;
+
+            colors[player] = {
+                gradient: `linear-gradient(135deg, hsl(${hue}, 70%, 65%) 0%, hsl(${hue}, 60%, 50%) 100%)`,
+                border: `hsl(${hue}, 60%, 40%)`,
+                solid: `hsl(${hue}, 70%, 60%)`,
+                hue: hue
+            };
+        });
+
+        return colors;
+    }
+
+    // Render player color legend
+    renderPlayerLegend(playerColors) {
+        let legendContainer = document.getElementById('player-legend');
+
+        // Create legend container if it doesn't exist
+        if (!legendContainer) {
+            const legendSection = document.querySelector('.legend');
+            if (legendSection) {
+                const playerLegendDiv = document.createElement('div');
+                playerLegendDiv.id = 'player-legend';
+                playerLegendDiv.className = 'player-legend';
+                legendSection.appendChild(playerLegendDiv);
+                legendContainer = playerLegendDiv;
+            }
+        }
+
+        if (!legendContainer) return;
+
+        const players = Object.keys(playerColors);
+        if (players.length === 0) {
+            legendContainer.innerHTML = '';
+            return;
+        }
+
+        let html = '<h4>Players</h4><div class="player-legend-items">';
+        players.forEach(player => {
+            const color = playerColors[player];
+            const squareCount = this.squares.filter(s => s === player).length;
+            html += `
+                <div class="player-legend-item">
+                    <div class="legend-color" style="background: ${color.gradient}; border-color: ${color.border};"></div>
+                    <span>${player} (${squareCount})</span>
+                </div>
+            `;
+        });
+        html += '</div>';
+        legendContainer.innerHTML = html;
     }
 
     // Check if a square at given row/col is a winning square
