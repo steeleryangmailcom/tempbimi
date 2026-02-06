@@ -739,6 +739,12 @@ class SuperBowlSquares {
 
     // Save to localStorage (and Firebase if available)
     saveToStorage() {
+        const filledCount = this.squares.filter(s => s !== null).length;
+        console.log('=== SAVE TRIGGERED ===');
+        console.log('Filled squares:', filledCount);
+        console.log('useFirebase:', this.useFirebase);
+        console.log('firebaseReady:', this.firebaseReady);
+
         const data = {
             squares: this.squares,
             rowNumbers: this.rowNumbers,
@@ -752,21 +758,23 @@ class SuperBowlSquares {
 
         // Always save to localStorage as backup
         localStorage.setItem('superbowlSquares', JSON.stringify(data));
+        console.log('Saved to localStorage');
 
         // Save to Firebase if available
         if (this.useFirebase && typeof saveToFirebase === 'function') {
-            console.log('useFirebase is true, saving to Firebase...');
+            console.log('Calling saveToFirebase...');
+            this.updateSyncStatus('connecting', 'Saving...');
             saveToFirebase(data).then(saved => {
                 if (saved) {
-                    console.log('Firebase save successful');
-                    this.updateSyncStatus('online', 'Synced with Firebase');
+                    console.log('Firebase save successful!');
+                    this.updateSyncStatus('online', 'Saved (' + filledCount + ' squares)');
                 } else {
                     console.error('Firebase save returned false');
-                    this.updateSyncStatus('offline', 'Sync failed');
+                    this.updateSyncStatus('offline', 'Save failed!');
                 }
             }).catch(err => {
                 console.error('Firebase save error:', err);
-                this.updateSyncStatus('offline', 'Sync error');
+                this.updateSyncStatus('offline', 'Save error!');
             });
         } else {
             console.log('Firebase not available: useFirebase=' + this.useFirebase);
