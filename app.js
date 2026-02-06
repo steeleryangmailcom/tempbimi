@@ -368,8 +368,14 @@ class SuperBowlSquares {
     // Render scores
     renderScores() {
         for (const quarter of ['q1', 'q2', 'q3', 'q4']) {
+            // Ensure scores object exists for this quarter
+            if (!this.scores || !this.scores[quarter]) {
+                this.scores = this.scores || {};
+                this.scores[quarter] = { afc: null, nfc: null };
+            }
+
             // Admin: populate input fields
-            if (this.isAdmin && this.scoreInputs) {
+            if (this.isAdmin && this.scoreInputs && this.scoreInputs[quarter]) {
                 if (this.scores[quarter].afc !== null) {
                     this.scoreInputs[quarter].afc.value = this.scores[quarter].afc;
                 }
@@ -913,13 +919,30 @@ class SuperBowlSquares {
         this.colNumbers = this.firebaseArrayToArray(data.colNumbers, 10);
 
         this.teams = data.teams || { afc: 'New England Patriots', nfc: 'Seattle Seahawks' };
-        this.scores = data.scores || {
+
+        // Ensure scores object has all quarters with proper structure
+        const defaultScores = {
             q1: { afc: null, nfc: null },
             q2: { afc: null, nfc: null },
             q3: { afc: null, nfc: null },
             q4: { afc: null, nfc: null }
         };
-        this.winners = data.winners || { q1: null, q2: null, q3: null, q4: null };
+        this.scores = { ...defaultScores };
+        if (data.scores) {
+            for (const quarter of ['q1', 'q2', 'q3', 'q4']) {
+                if (data.scores[quarter]) {
+                    this.scores[quarter] = {
+                        afc: data.scores[quarter].afc ?? null,
+                        nfc: data.scores[quarter].nfc ?? null
+                    };
+                }
+            }
+        }
+
+        // Ensure winners object has all quarters
+        const defaultWinners = { q1: null, q2: null, q3: null, q4: null };
+        this.winners = { ...defaultWinners, ...data.winners };
+
         this.defaultLimit = data.defaultLimit || 5;
         this.playerLimits = data.playerLimits || {};
     }
