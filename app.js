@@ -794,6 +794,26 @@ class SuperBowlSquares {
         }
     }
 
+    // Convert Firebase object format back to array
+    // Firebase converts sparse arrays like [null, null, "name", null] to objects like {2: "name"}
+    firebaseArrayToArray(obj, length) {
+        if (Array.isArray(obj)) {
+            return obj;
+        }
+        if (!obj || typeof obj !== 'object') {
+            return Array(length).fill(null);
+        }
+        // Convert object with numeric keys to array
+        const arr = Array(length).fill(null);
+        for (const key in obj) {
+            const index = parseInt(key, 10);
+            if (!isNaN(index) && index >= 0 && index < length) {
+                arr[index] = obj[key];
+            }
+        }
+        return arr;
+    }
+
     // Apply data from any source (localStorage or Firebase)
     applyData(data) {
         if (!data || typeof data !== 'object') {
@@ -801,15 +821,11 @@ class SuperBowlSquares {
             return;
         }
 
-        // Ensure squares is a valid array of 100 elements
-        if (Array.isArray(data.squares) && data.squares.length === 100) {
-            this.squares = data.squares;
-        } else if (!this.squares || this.squares.length !== 100) {
-            this.squares = Array(100).fill(null);
-        }
+        // Convert squares from Firebase object format if needed
+        this.squares = this.firebaseArrayToArray(data.squares, 100);
+        this.rowNumbers = this.firebaseArrayToArray(data.rowNumbers, 10);
+        this.colNumbers = this.firebaseArrayToArray(data.colNumbers, 10);
 
-        this.rowNumbers = Array.isArray(data.rowNumbers) ? data.rowNumbers : Array(10).fill(null);
-        this.colNumbers = Array.isArray(data.colNumbers) ? data.colNumbers : Array(10).fill(null);
         this.teams = data.teams || { afc: 'New England Patriots', nfc: 'Seattle Seahawks' };
         this.scores = data.scores || {
             q1: { afc: null, nfc: null },
@@ -840,7 +856,17 @@ class SuperBowlSquares {
     // Handle real-time updates from Firebase
     onFirebaseDataUpdate(data) {
         console.log('=== Firebase Update Received ===');
-        const filledSquares = data.squares ? data.squares.filter(s => s !== null).length : 0;
+
+        // Count filled squares (handle both array and object formats from Firebase)
+        let filledSquares = 0;
+        if (data.squares) {
+            if (Array.isArray(data.squares)) {
+                filledSquares = data.squares.filter(s => s !== null).length;
+            } else {
+                // Firebase converts sparse arrays to objects
+                filledSquares = Object.keys(data.squares).length;
+            }
+        }
         console.log('Filled squares in update:', filledSquares);
 
         // Don't update if modal is open (user is in the middle of an action)
@@ -851,7 +877,7 @@ class SuperBowlSquares {
 
         this.applyData(data);
         this.render();
-        this.updateSyncStatus('online', 'Synced (' + filledSquares + ' squares filled)');
+        this.updateSyncStatus('online', 'Synced (' + filledSquares + ' squares)');
         console.log('UI updated from Firebase');
     }
 
