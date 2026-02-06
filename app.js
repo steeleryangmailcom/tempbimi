@@ -36,14 +36,17 @@ class SuperBowlSquares {
 
         // Firebase flag
         this.useFirebase = false;
+        this.firebaseReady = false;
 
-        // Initialize
-        this.loadFromStorage();
+        // Initialize DOM first
         this.initializeDOM();
+
+        // DON'T load from localStorage initially - wait for Firebase
+        // This prevents race conditions where localStorage overwrites Firebase
         this.render();
         this.attachEventListeners();
 
-        // Initialize Firebase (async, will update UI when ready)
+        // Initialize Firebase (async, will load data when ready)
         this.initFirebase();
     }
 
@@ -454,6 +457,12 @@ class SuperBowlSquares {
 
     // Open modal for a square
     openModal(index) {
+        // Warn if Firebase isn't ready yet
+        if (!this.firebaseReady) {
+            alert('Please wait - connecting to server...');
+            return;
+        }
+
         this.currentSquareIndex = index;
         const row = Math.floor(index / 10);
         const col = index % 10;
@@ -844,6 +853,10 @@ class SuperBowlSquares {
 
         if (typeof initializeFirebase !== 'function') {
             console.log('Firebase not available, using localStorage only');
+            // Fall back to localStorage
+            this.loadFromStorage();
+            this.render();
+            this.firebaseReady = true;
             this.updateSyncStatus('offline', 'Local storage only');
             return;
         }
@@ -857,24 +870,36 @@ class SuperBowlSquares {
                 // Load initial data from Firebase
                 const firebaseData = await loadFromFirebase();
                 if (firebaseData) {
+                    console.log('Loaded data from Firebase');
                     this.applyData(firebaseData);
-                    this.render();
                 } else {
-                    // If Firebase is empty, push current localStorage data
-                    this.saveToStorage();
+                    console.log('Firebase empty, starting fresh');
+                    // Don't load from localStorage - start fresh for new games
                 }
+
+                this.render();
+                this.firebaseReady = true;
 
                 // Listen for real-time updates
                 onFirebaseUpdate((data) => this.onFirebaseDataUpdate(data));
 
-                this.updateSyncStatus('online', 'Connected to Firebase');
+                const filledCount = this.squares.filter(s => s !== null).length;
+                this.updateSyncStatus('online', 'Connected (' + filledCount + ' squares)');
                 console.log('Firebase sync enabled - data will sync across all users');
             } else {
+                // Fall back to localStorage
+                this.loadFromStorage();
+                this.render();
+                this.firebaseReady = true;
                 this.updateSyncStatus('offline', 'Firebase not configured');
             }
         } catch (error) {
             console.error('Firebase initialization failed, using localStorage:', error);
             this.useFirebase = false;
+            // Fall back to localStorage
+            this.loadFromStorage();
+            this.render();
+            this.firebaseReady = true;
             this.updateSyncStatus('offline', 'Firebase error - using local');
         }
     }
