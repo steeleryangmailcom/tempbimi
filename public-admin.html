@@ -26,9 +26,7 @@
             <div class="rules-content">
                 <ul>
                     <li><strong>Cost:</strong> Each square costs <strong>$2</strong></li>
-                    <li><strong>Initial Picks:</strong> Everyone starts with <strong>5 picks</strong> (maximum $10 investment)</li>
-                    <li><strong>Additional Picks:</strong> More squares may open up later depending on level of participation</li>
-                    <li><strong>Claiming:</strong> Click any available (empty) square to claim it</li>
+                    <li><strong>Claiming:</strong> Click any available (empty) square to claim it - <strong>no limit</strong> on picks!</li>
                     <li><strong>Numbers:</strong> Once all squares are filled, random numbers (0-9) will be assigned to rows and columns</li>
                     <li><strong>Payouts:</strong> Q1: <strong>$25</strong> | Halftime: <strong>$50</strong> | Q3: <strong>$25</strong> | Final: <strong>$100</strong></li>
                 </ul>
@@ -59,27 +57,6 @@
                 </div>
             </div>
 
-            <div class="control-section">
-                <h3>Default Square Limit</h3>
-                <div class="limit-control">
-                    <label for="default-limit">Default squares per player:</label>
-                    <input type="number" id="default-limit" min="1" max="100" value="5">
-                    <button id="save-default-limit" class="btn btn-primary">Save Default</button>
-                </div>
-            </div>
-
-            <div class="control-section">
-                <h3>Player Limits</h3>
-                <p class="help-text">Adjust individual player limits. Players can purchase more squares by increasing their limit.</p>
-                <div class="player-limits-table" id="player-limits-table">
-                    <!-- Player limits will be inserted here -->
-                </div>
-                <div class="add-player-limit">
-                    <input type="text" id="new-player-name" placeholder="Player name (exact match)">
-                    <input type="number" id="new-player-limit" min="1" max="100" value="10" placeholder="Limit">
-                    <button id="add-player-limit" class="btn btn-primary">Add/Update Limit</button>
-                </div>
-            </div>
         </div>
 
         <div class="game-board-wrapper">
@@ -222,6 +199,8 @@
         window.isPublicMode = true;
         // Public version: $2 per square
         window.costPerSquare = 2;
+        // Public version: unlimited picks
+        window.unlimitedPicks = true;
     </script>
     <script src="app.js"></script>
     <script>

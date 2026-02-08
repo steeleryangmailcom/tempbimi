@@ -142,8 +142,15 @@ class SuperBowlSquares {
             });
             document.getElementById('import-file').addEventListener('change', (e) => this.importData(e));
             document.getElementById('update-scores').addEventListener('click', () => this.updateScores());
-            document.getElementById('save-default-limit').addEventListener('click', () => this.saveDefaultLimit());
-            document.getElementById('add-player-limit').addEventListener('click', () => this.addPlayerLimit());
+            // Player limit controls (only if elements exist - not used in unlimited picks mode)
+            const saveDefaultLimitBtn = document.getElementById('save-default-limit');
+            const addPlayerLimitBtn = document.getElementById('add-player-limit');
+            if (saveDefaultLimitBtn) {
+                saveDefaultLimitBtn.addEventListener('click', () => this.saveDefaultLimit());
+            }
+            if (addPlayerLimitBtn) {
+                addPlayerLimitBtn.addEventListener('click', () => this.addPlayerLimit());
+            }
         }
     }
 
@@ -167,6 +174,10 @@ class SuperBowlSquares {
 
     // Check if player can claim more squares
     canPlayerClaimMore(playerName) {
+        // If unlimited picks mode is enabled, always allow
+        if (window.unlimitedPicks) {
+            return true;
+        }
         const limit = this.getPlayerLimit(playerName);
         const count = this.countPlayerSquares(playerName);
         return count < limit;
