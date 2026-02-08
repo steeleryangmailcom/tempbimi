@@ -611,7 +611,8 @@ class SuperBowlSquares {
                 }
             } else {
                 document.getElementById('save-player').style.display = 'inline-block';
-                if (this.modalLimitWarning && !this.isAdmin) {
+                // Only show remaining squares info if NOT in unlimited picks mode
+                if (this.modalLimitWarning && !this.isAdmin && !window.unlimitedPicks) {
                     this.modalLimitWarning.textContent = `You have ${playerLimit - playerCount - 1} squares remaining after this claim.`;
                     this.modalLimitWarning.style.display = 'block';
                     this.modalLimitWarning.classList.remove('warning');

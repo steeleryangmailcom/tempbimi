@@ -919,6 +919,20 @@ header h1 {
     color: #fff;
 }
 
+/* Payouts styling for mobile wrap */
+.rules-content li.payouts-item {
+    flex-wrap: wrap;
+}
+
+.rules-content .payout {
+    display: inline-block;
+    background: rgba(255, 215, 0, 0.15);
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin: 3px 4px 3px 0;
+    white-space: nowrap;
+}
+
 .investment-highlight {
     color: #4caf50 !important;
     font-weight: bold;
@@ -1273,6 +1287,16 @@ header h1 {
 
     .add-player-limit input[type="text"] {
         min-width: auto;
+    }
+
+    /* Rules section mobile fix */
+    .rules-section {
+        padding: 15px;
+    }
+
+    .rules-content li {
+        flex-wrap: wrap;
+        font-size: 0.9rem;
     }
 }
 
