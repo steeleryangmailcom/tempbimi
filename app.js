@@ -210,8 +210,12 @@ class SuperBowlSquares {
         const investment = count * this.costPerSquare;
 
         this.mySquaresCountElement.textContent = count;
-        this.mySquaresLimitElement.textContent = limit;
-        this.mySquaresRemainingElement.textContent = remaining;
+        if (this.mySquaresLimitElement) {
+            this.mySquaresLimitElement.textContent = limit;
+        }
+        if (this.mySquaresRemainingElement) {
+            this.mySquaresRemainingElement.textContent = remaining;
+        }
         if (this.myInvestmentElement) {
             this.myInvestmentElement.textContent = '$' + investment;
         }
