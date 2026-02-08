@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Bowl Squares - Admin</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Main Application (no login required for admin) -->
+    <div class="container" id="main-app">
+        <header>
+            <div class="header-top">
+                <div class="user-info" id="user-info">
+                    <span class="admin-badge">ADMIN</span>
+                    <span class="user-name" id="user-name">Administrator</span>
+                </div>
+            </div>
+            <h1>Super Bowl Squares - Admin</h1>
+            <p class="subtitle">Super Bowl LIX - February 9, 2025</p>
+        </header>
+
+        <!-- Rules Section -->
+        <div class="rules-section">
+            <h2>Game Rules</h2>
+            <div class="rules-content">
+                <ul>
+                    <li><strong>Cost:</strong> Each square costs <strong>$5</strong></li>
+                    <li><strong>Initial Picks:</strong> Everyone starts with <strong>5 picks</strong> (maximum $25 investment)</li>
+                    <li><strong>Additional Picks:</strong> More squares may open up later depending on level of participation</li>
+                    <li><strong>Claiming:</strong> Click any available (empty) square to claim it</li>
+                    <li><strong>Numbers:</strong> Once all squares are filled, random numbers (0-9) will be assigned to rows and columns</li>
+                    <li><strong>Winning:</strong> At the end of each quarter, the square matching the last digit of each team's score wins!</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Sync Status -->
+        <div class="sync-status-bar">
+            <div class="sync-status" id="sync-status">
+                <span class="status-dot offline"></span>
+                <span class="status-text">Connecting...</span>
+            </div>
+        </div>
+
+        <!-- Admin Controls -->
+        <div class="admin-controls">
+            <h2>Admin Controls</h2>
+
+            <div class="control-section">
+                <h3>Game Management</h3>
+                <div class="actions">
+                    <button id="randomize-numbers" class="btn btn-warning">Randomize Numbers</button>
+                    <button id="clear-numbers" class="btn btn-secondary">Clear Numbers</button>
+                    <button id="reset-all" class="btn btn-danger">Reset All</button>
+                    <button id="export-data" class="btn btn-info">Export Data</button>
+                    <button id="import-data" class="btn btn-info">Import Data</button>
+                    <input type="file" id="import-file" accept=".json" style="display: none;">
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>Default Square Limit</h3>
+                <div class="limit-control">
+                    <label for="default-limit">Default squares per player:</label>
+                    <input type="number" id="default-limit" min="1" max="100" value="5">
+                    <button id="save-default-limit" class="btn btn-primary">Save Default</button>
+                </div>
+            </div>
+
+            <div class="control-section">
+                <h3>Player Limits</h3>
+                <p class="help-text">Adjust individual player limits. Players can purchase more squares by increasing their limit.</p>
+                <div class="player-limits-table" id="player-limits-table">
+                    <!-- Player limits will be inserted here -->
+                </div>
+                <div class="add-player-limit">
+                    <input type="text" id="new-player-name" placeholder="Player name (exact match)">
+                    <input type="number" id="new-player-limit" min="1" max="100" value="10" placeholder="Limit">
+                    <button id="add-player-limit" class="btn btn-primary">Add/Update Limit</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="game-board-wrapper">
+            <!-- AFC Team Logo (Top) -->
+            <div class="team-header afc-header">
+                <img src="https://static.www.nfl.com/image/private/f_auto/league/moyfxx3dq5pio4aiftnc" alt="New England Patriots" class="team-logo">
+                <span class="team-name">New England Patriots</span>
+            </div>
+
+            <div class="game-board-with-nfc">
+                <!-- NFC Team Logo (Left Side) -->
+                <div class="team-sidebar nfc-sidebar">
+                    <img src="https://static.www.nfl.com/image/private/f_auto/league/gcytzwpjdzbpwnwxincg" alt="Seattle Seahawks" class="team-logo">
+                    <span class="team-name">Seattle Seahawks</span>
+                </div>
+
+                <div class="game-board">
+                    <div class="numbers-row" id="numbers-row">
+                        <div class="corner"></div>
+                        <!-- Numbers 0-9 will be inserted here -->
+                    </div>
+                    <div class="grid-container">
+                        <div class="numbers-col" id="numbers-col">
+                            <!-- Numbers 0-9 will be inserted here -->
+                        </div>
+                        <div class="grid" id="squares-grid">
+                            <!-- 100 squares will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="score-section">
+            <h2>Game Scores</h2>
+            <div class="scores-grid">
+                <div class="score-quarter">
+                    <h3>Q1</h3>
+                    <div class="score-inputs">
+                        <input type="number" id="q1-afc" placeholder="NE" min="0" max="99">
+                        <span>-</span>
+                        <input type="number" id="q1-nfc" placeholder="SEA" min="0" max="99">
+                    </div>
+                    <div class="quarter-winner" id="q1-winner"></div>
+                </div>
+                <div class="score-quarter">
+                    <h3>Q2 (Half)</h3>
+                    <div class="score-inputs">
+                        <input type="number" id="q2-afc" placeholder="NE" min="0" max="99">
+                        <span>-</span>
+                        <input type="number" id="q2-nfc" placeholder="SEA" min="0" max="99">
+                    </div>
+                    <div class="quarter-winner" id="q2-winner"></div>
+                </div>
+                <div class="score-quarter">
+                    <h3>Q3</h3>
+                    <div class="score-inputs">
+                        <input type="number" id="q3-afc" placeholder="NE" min="0" max="99">
+                        <span>-</span>
+                        <input type="number" id="q3-nfc" placeholder="SEA" min="0" max="99">
+                    </div>
+                    <div class="quarter-winner" id="q3-winner"></div>
+                </div>
+                <div class="score-quarter">
+                    <h3>Q4 (Final)</h3>
+                    <div class="score-inputs">
+                        <input type="number" id="q4-afc" placeholder="NE" min="0" max="99">
+                        <span>-</span>
+                        <input type="number" id="q4-nfc" placeholder="SEA" min="0" max="99">
+                    </div>
+                    <div class="quarter-winner" id="q4-winner"></div>
+                </div>
+            </div>
+            <button id="update-scores" class="btn btn-primary">Update Scores & Find Winners</button>
+        </div>
+
+        <div class="stats-section">
+            <h2>Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-number" id="squares-filled">0</span>
+                    <span class="stat-label">Squares Filled</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="squares-remaining">100</span>
+                    <span class="stat-label">Squares Remaining</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number" id="unique-players">0</span>
+                    <span class="stat-label">Unique Players</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <h3>Legend</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color available"></div>
+                    <span>Available</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color taken"></div>
+                    <span>Taken</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color winner"></div>
+                    <span>Winner</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for claiming a square -->
+    <div class="modal" id="player-modal">
+        <div class="modal-content">
+            <h3 id="modal-title">Claim This Square</h3>
+            <p>Position: Row <span id="modal-row"></span>, Column <span id="modal-col"></span></p>
+            <p class="modal-user-name">Claiming as: <strong id="modal-player-name"></strong></p>
+            <p id="modal-current-owner" class="modal-current-owner"></p>
+            <p id="modal-limit-warning" class="modal-limit-warning"></p>
+            <div class="modal-actions">
+                <button id="save-player" class="btn btn-primary">Claim Square</button>
+                <button id="clear-square" class="btn btn-warning">Release Square</button>
+                <button id="cancel-modal" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="firebase-config.js"></script>
+
+    <script src="app.js"></script>
+    <script>
+        // Admin mode - full controls
+        window.isAdminMode = true;
+        // Public mode - no Microsoft auth required
+        window.isPublicMode = true;
+
+        // For admin, set a default name
+        document.addEventListener('DOMContentLoaded', () => {
+            // Override getLoggedInUserName for admin
+            if (window.game) {
+                window.game.getLoggedInUserName = () => 'Administrator';
+            }
+        });
+    </script>
+</body>
+</html>
