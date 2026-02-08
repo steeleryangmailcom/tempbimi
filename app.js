@@ -75,8 +75,8 @@ class SuperBowlSquares {
         this.mySquaresRemainingElement = document.getElementById('my-squares-remaining');
         this.myInvestmentElement = document.getElementById('my-investment');
 
-        // Cost per square
-        this.costPerSquare = 5;
+        // Cost per square (configurable via window.costPerSquare)
+        this.costPerSquare = window.costPerSquare || 5;
 
         // Sync status elements
         this.syncStatusElement = document.getElementById('sync-status');
