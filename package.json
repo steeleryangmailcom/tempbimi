@@ -1,0 +1,28 @@
+{
+  "name": "linkedin-rocketreach-enrichment",
+  "version": "1.0.0",
+  "description": "Look up contacts by name/company, find LinkedIn profiles via RocketReach, enrich data, and push to HubSpot",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "enrich": "ts-node src/index.ts",
+    "enrich:csv": "ts-node src/index.ts --csv"
+  },
+  "dependencies": {
+    "axios": "^1.7.0",
+    "chalk": "^4.1.2",
+    "cli-table3": "^0.6.5",
+    "commander": "^12.1.0",
+    "csv-parse": "^5.5.0",
+    "dotenv": "^16.4.0",
+    "inquirer": "^8.2.6"
+  },
+  "devDependencies": {
+    "@types/inquirer": "^8.2.10",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.0",
+    "ts-node": "^10.9.2"
+  }
+}
