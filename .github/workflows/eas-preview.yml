@@ -1,0 +1,37 @@
+name: EAS Preview Build
+
+on:
+  pull_request:
+    branches: [main, master]
+    types: [opened, synchronize]
+
+jobs:
+  preview:
+    name: Build Preview
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Expo & EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build preview (iOS Simulator + Android)
+        run: eas build --profile preview --platform all --non-interactive
+
+      - name: Comment PR with build links
+        uses: expo/expo-github-action/preview-comment@v8
+        with:
+          channel: pr-${{ github.event.number }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,36 @@
+name: EAS Production Build & Submit
+
+on:
+  push:
+    tags:
+      - "v*.*.*"   # Trigger on version tags like v1.0.0
+
+jobs:
+  build-and-submit:
+    name: Build & Submit to App Stores
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Expo & EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build production (iOS + Android)
+        run: eas build --profile production --platform all --non-interactive
+
+      - name: Submit to App Stores
+        run: eas submit --platform all --non-interactive
+        # Requires Apple App Store Connect API key + Google Play Service Account
+        # configured in EAS Secrets on expo.dev
