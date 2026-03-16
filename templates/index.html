@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinkedIn Profile Lookup</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #0077b5;
+      color: white;
+      padding: 18px 32px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    header svg { flex-shrink: 0; }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    header p {
+      font-size: 0.85rem;
+      opacity: 0.85;
+      margin-top: 2px;
+    }
+
+    .container {
+      max-width: 980px;
+      margin: 32px auto;
+      padding: 0 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: #333;
+    }
+
+    .format-hint {
+      background: #f8f9fa;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 14px;
+      font-size: 0.82rem;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .format-hint code {
+      background: #e8eaf6;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.9em;
+    }
+
+    textarea {
+      width: 100%;
+      height: 200px;
+      border: 1.5px solid #d0d0d0;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 0.88rem;
+      resize: vertical;
+      transition: border-color 0.2s;
+      line-height: 1.5;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #0077b5;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 14px;
+      align-items: center;
+    }
+
+    button {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.98); }
+
+    #lookupBtn {
+      background: #0077b5;
+      color: white;
+    }
+
+    #lookupBtn:hover { background: #005e8e; }
+    #lookupBtn:disabled { background: #a0c4d8; cursor: not-allowed; }
+
+    #clearBtn {
+      background: #f0f0f0;
+      color: #555;
+    }
+
+    #clearBtn:hover { background: #e0e0e0; }
+
+    #exportBtn {
+      background: #27ae60;
+      color: white;
+      margin-left: auto;
+    }
+
+    #exportBtn:hover { background: #1e8449; }
+    #exportBtn:disabled { background: #a9dfbf; cursor: not-allowed; }
+
+    .status-bar {
+      font-size: 0.83rem;
+      color: #666;
+      margin-top: 10px;
+      min-height: 20px;
+    }
+
+    .status-bar .progress {
+      color: #0077b5;
+      font-weight: 500;
+    }
+
+    .status-bar .done { color: #27ae60; font-weight: 500; }
+
+    #alert {
+      display: none;
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      color: #856404;
+    }
+
+    #alert a { color: #0077b5; }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .results-header h2 { margin-bottom: 0; }
+
+    .badge {
+      font-size: 0.75rem;
+      background: #e8f4fb;
+      color: #0077b5;
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-weight: 600;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 10px 12px;
+      background: #f5f6f8;
+      color: #444;
+      font-weight: 600;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    tbody tr { border-bottom: 1px solid #f0f0f0; }
+    tbody tr:hover { background: #fafbff; }
+
+    tbody td {
+      padding: 10px 12px;
+      vertical-align: middle;
+    }
+
+    .pill {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 9px;
+      border-radius: 20px;
+    }
+
+    .pill.found { background: #d4edda; color: #155724; }
+    .pill.not-found { background: #fff3cd; color: #856404; }
+    .pill.error { background: #f8d7da; color: #721c24; }
+    .pill.pending { background: #e2e3e5; color: #555; }
+    .pill.searching { background: #cce5ff; color: #004085; }
+
+    a.profile-link {
+      color: #0077b5;
+      text-decoration: none;
+      word-break: break-all;
+      font-size: 0.83rem;
+    }
+
+    a.profile-link:hover { text-decoration: underline; }
+
+    .empty-results {
+      text-align: center;
+      padding: 40px 0;
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+
+    #resultsSection { display: none; }
+
+    .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid #cce5ff;
+      border-top-color: #004085;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 34 34" fill="white">
+    <path d="M34 2.5v29A2.5 2.5 0 0 1 31.5 34h-29A2.5 2.5 0 0 1 0 31.5v-29A2.5 2.5 0 0 1 2.5 0h29A2.5 2.5 0 0 1 34 2.5zM10 13H5v16h5V13zm.45-5.5A2.95 2.95 0 1 0 7.5 10.45 2.95 2.95 0 0 0 10.45 7.5zM29 19.28c0-4.81-3.06-6.68-6.1-6.68a5.7 5.7 0 0 0-5.06 2.58H17.7V13H13v16h5v-8.51a3.32 3.32 0 0 1 3-3.51C23 16.98 24 18.4 24 20.9V29h5z"/>
+  </svg>
+  <div>
+    <h1>LinkedIn Profile Lookup</h1>
+    <p>Paste a list of contacts to find their LinkedIn profiles in bulk</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div id="alert">
+    <strong>API not configured.</strong> Set the <code>GOOGLE_API_KEY</code> and <code>GOOGLE_CSE_ID</code> environment variables before starting the server.
+    See the <a href="https://developers.google.com/custom-search/v1/overview" target="_blank">Google Custom Search API docs</a> for setup instructions.
+  </div>
+
+  <div class="card">
+    <h2>Paste your contact list</h2>
+    <div class="format-hint">
+      Accepts common delimiters — comma, tab, or pipe (<code>|</code>). One person per line.<br/>
+      <strong>Columns (in order):</strong> <code>First Name</code> &nbsp;•&nbsp; <code>Last Name</code> &nbsp;•&nbsp; <code>Company</code><br/>
+      Example: <code>Jane, Doe, Acme Corp</code>&nbsp; or paste directly from a spreadsheet.
+    </div>
+    <textarea id="inputArea" placeholder="Jane, Doe, Acme Corp&#10;John, Smith, Globex&#10;Alice, Johnson, Initech"></textarea>
+    <div class="actions">
+      <button id="lookupBtn">Search LinkedIn</button>
+      <button id="clearBtn">Clear</button>
+      <button id="exportBtn" disabled>Export CSV</button>
+    </div>
+    <div class="status-bar" id="statusBar"></div>
+  </div>
+
+  <div class="card" id="resultsSection">
+    <div class="results-header">
+      <h2>Results</h2>
+      <span class="badge" id="resultsBadge"></span>
+    </div>
+    <table id="resultsTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>First Name</th>
+          <th>Last Name</th>
+          <th>Company</th>
+          <th>Status</th>
+          <th>LinkedIn Profile URL</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody">
+        <tr><td colspan="6" class="empty-results">Results will appear here after lookup.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+  const inputArea = document.getElementById('inputArea');
+  const lookupBtn = document.getElementById('lookupBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const statusBar = document.getElementById('statusBar');
+  const resultsSection = document.getElementById('resultsSection');
+  const resultsBody = document.getElementById('resultsBody');
+  const resultsBadge = document.getElementById('resultsBadge');
+  const alertEl = document.getElementById('alert');
+
+  let allResults = [];
+
+  // Check API config
+  fetch('/api/config-status').then(r => r.json()).then(data => {
+    if (!data.configured) alertEl.style.display = 'block';
+  }).catch(() => {});
+
+  function parsePeople(raw) {
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    return lines.map(line => {
+      // Detect delimiter: tab > pipe > comma
+      let parts;
+      if (line.includes('\t')) {
+        parts = line.split('\t');
+      } else if (line.includes('|')) {
+        parts = line.split('|');
+      } else {
+        parts = line.split(',');
+      }
+      parts = parts.map(p => p.trim());
+      return {
+        first_name: parts[0] || '',
+        last_name:  parts[1] || '',
+        company:    parts[2] || '',
+      };
+    }).filter(p => p.first_name || p.last_name);
+  }
+
+  function renderRow(result, index, statusOverride) {
+    const status = statusOverride || result.status;
+    const pillMap = {
+      found:      ['found',     'Found'],
+      not_found:  ['not-found', 'Not Found'],
+      error:      ['error',     'Error'],
+      pending:    ['pending',   'Pending'],
+      searching:  ['searching', ''],
+    };
+    const [pillClass, pillLabel] = pillMap[status] || ['pending', 'Pending'];
+    const spinner = status === 'searching' ? '<span class="spinner"></span>Searching…' : pillLabel;
+
+    const urlCell = result.url
+      ? `<a class="profile-link" href="${result.url}" target="_blank" rel="noopener">${result.url}</a>`
+      : (result.error && status !== 'searching' ? `<span style="color:#999;font-size:0.8rem">${result.error}</span>` : '');
+
+    return `
+      <tr id="row-${index}">
+        <td>${index + 1}</td>
+        <td>${esc(result.first_name)}</td>
+        <td>${esc(result.last_name)}</td>
+        <td>${esc(result.company)}</td>
+        <td><span class="pill ${pillClass}">${spinner}</span></td>
+        <td>${urlCell}</td>
+      </tr>`;
+  }
+
+  function esc(str) {
+    return String(str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function updateBadge(results) {
+    const found = results.filter(r => r.status === 'found').length;
+    resultsBadge.textContent = `${found} / ${results.length} found`;
+  }
+
+  async function runLookup() {
+    const raw = inputArea.value.trim();
+    if (!raw) { statusBar.textContent = 'Please paste a contact list first.'; return; }
+
+    const people = parsePeople(raw);
+    if (people.length === 0) { statusBar.textContent = 'No valid entries found. Check the format.'; return; }
+
+    // Build initial pending rows
+    allResults = people.map(p => ({ ...p, status: 'pending', url: null, error: null }));
+    resultsSection.style.display = 'block';
+    exportBtn.disabled = true;
+    lookupBtn.disabled = true;
+    updateBadge(allResults);
+
+    resultsBody.innerHTML = allResults.map((r, i) => renderRow(r, i, 'pending')).join('');
+
+    // Process in batches of 5 to show live progress
+    const BATCH = 5;
+    let processed = 0;
+
+    for (let start = 0; start < people.length; start += BATCH) {
+      const batch = people.slice(start, start + BATCH);
+      const batchIndexes = batch.map((_, j) => start + j);
+
+      // Mark batch as searching
+      batchIndexes.forEach(i => {
+        allResults[i].status = 'searching';
+        const row = document.getElementById(`row-${i}`);
+        if (row) row.outerHTML = renderRow(allResults[i], i, 'searching');
+      });
+
+      statusBar.innerHTML = `<span class="progress">Searching ${start + 1}–${Math.min(start + BATCH, people.length)} of ${people.length}…</span>`;
+
+      try {
+        const resp = await fetch('/api/lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ people: batch }),
+        });
+        const data = await resp.json();
+
+        data.results.forEach((result, j) => {
+          const i = batchIndexes[j];
+          allResults[i] = { ...allResults[i], ...result };
+          const row = document.getElementById(`row-${i}`);
+          if (row) row.outerHTML = renderRow(allResults[i], i);
+        });
+      } catch (err) {
+        batchIndexes.forEach(i => {
+          allResults[i].status = 'error';
+          allResults[i].error = 'Request failed';
+          const row = document.getElementById(`row-${i}`);
+          if (row) row.outerHTML = renderRow(allResults[i], i);
+        });
+      }
+
+      processed += batch.length;
+      updateBadge(allResults);
+    }
+
+    const found = allResults.filter(r => r.status === 'found').length;
+    statusBar.innerHTML = `<span class="done">Done — ${found} of ${allResults.length} profiles found.</span>`;
+    lookupBtn.disabled = false;
+    exportBtn.disabled = false;
+  }
+
+  function exportCSV() {
+    const header = ['First Name', 'Last Name', 'Company', 'Status', 'LinkedIn URL'];
+    const rows = allResults.map(r => [
+      r.first_name, r.last_name, r.company,
+      r.status === 'found' ? 'Found' : r.status === 'not_found' ? 'Not Found' : 'Error',
+      r.url || '',
+    ]);
+    const csvContent = [header, ...rows]
+      .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `linkedin_lookup_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  lookupBtn.addEventListener('click', runLookup);
+  clearBtn.addEventListener('click', () => {
+    inputArea.value = '';
+    resultsBody.innerHTML = '<tr><td colspan="6" class="empty-results">Results will appear here after lookup.</td></tr>';
+    resultsSection.style.display = 'none';
+    statusBar.textContent = '';
+    exportBtn.disabled = true;
+    allResults = [];
+  });
+  exportBtn.addEventListener('click', exportCSV);
+</script>
+</body>
+</html>
