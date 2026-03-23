@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Blueshift Customer Tester</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: white;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    header svg { flex-shrink: 0; }
+
+    header h1 { font-size: 1.4rem; font-weight: 600; }
+    header p { font-size: 0.85rem; opacity: 0.7; margin-top: 2px; }
+
+    .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+    }
+
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #16213e;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
+
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.82rem; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.04em; }
+
+    input[type="password"], input[type="text"] {
+      border: 1.5px solid #dde1ea;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+      outline: none;
+      width: 100%;
+    }
+
+    input[type="password"]:focus, input[type="text"]:focus {
+      border-color: #4361ee;
+      box-shadow: 0 0 0 3px rgba(67,97,238,0.1);
+    }
+
+    .file-drop {
+      border: 2px dashed #c5cae9;
+      border-radius: 10px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      background: #fafbff;
+    }
+
+    .file-drop:hover, .file-drop.drag-over {
+      border-color: #4361ee;
+      background: #eef0ff;
+    }
+
+    .file-drop input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    .file-drop .file-icon { font-size: 2rem; margin-bottom: 8px; }
+    .file-drop .file-label { font-size: 0.9rem; color: #666; }
+    .file-drop .file-label span { color: #4361ee; font-weight: 600; }
+    .file-drop .file-name { margin-top: 8px; font-size: 0.85rem; color: #4361ee; font-weight: 500; }
+
+    .hint {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 6px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #4361ee, #3a0ca3);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 12px 28px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      margin-top: 20px;
+    }
+
+    .btn:hover { opacity: 0.9; }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-banner {
+      background: #fff0f0;
+      border: 1px solid #ffcdd2;
+      border-radius: 8px;
+      padding: 14px 18px;
+      color: #c62828;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    /* Summary bar */
+    .summary {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: white;
+      border-radius: 10px;
+      padding: 16px 24px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      text-align: center;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .stat .value { font-size: 1.8rem; font-weight: 700; line-height: 1; }
+    .stat .label { font-size: 0.78rem; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .stat.green .value { color: #2e7d32; }
+    .stat.red .value { color: #c62828; }
+    .stat.blue .value { color: #1565c0; }
+    .stat.orange .value { color: #e65100; }
+
+    /* Customer results */
+    .customer-block {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .customer-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s;
+    }
+
+    .customer-header:hover { background: #fafbff; }
+
+    .customer-email { font-weight: 600; font-size: 0.95rem; flex: 1; }
+    .customer-uuid { font-size: 0.78rem; color: #888; font-family: monospace; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .badge.all-match { background: #e8f5e9; color: #2e7d32; }
+    .badge.has-mismatch { background: #fff3e0; color: #e65100; }
+    .badge.error { background: #ffebee; color: #c62828; }
+
+    .chevron {
+      transition: transform 0.2s;
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+
+    .customer-block.open .chevron { transform: rotate(180deg); }
+
+    .customer-body { display: none; border-top: 1px solid #f0f0f0; }
+    .customer-block.open .customer-body { display: block; }
+
+    .error-msg { padding: 16px 20px; color: #c62828; font-size: 0.88rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    thead th {
+      background: #f7f8fc;
+      padding: 10px 16px;
+      text-align: left;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #888;
+      font-weight: 600;
+      border-bottom: 1px solid #eee;
+    }
+
+    tbody tr { border-bottom: 1px solid #f3f3f3; transition: background 0.1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #fafbff; }
+
+    td { padding: 10px 16px; vertical-align: top; }
+
+    td.field-name { font-weight: 600; color: #333; font-family: monospace; font-size: 0.85rem; }
+    td.match { color: #2e7d32; }
+    td.mismatch { color: #c62828; }
+
+    .match-icon { font-size: 1rem; }
+
+    .results-section { display: none; }
+
+    .progress-bar-wrap {
+      background: #eee;
+      border-radius: 4px;
+      height: 6px;
+      margin-top: 12px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #4361ee, #7b2ff7);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .progress-label {
+      font-size: 0.82rem;
+      color: #666;
+      margin-top: 6px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+    <circle cx="18" cy="18" r="18" fill="#4361ee" opacity="0.2"/>
+    <circle cx="18" cy="18" r="10" fill="#4361ee"/>
+    <circle cx="18" cy="18" r="5" fill="white"/>
+  </svg>
+  <div>
+    <h1>Blueshift Customer Tester</h1>
+    <p>Validate CSV customer data against Blueshift API responses</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h2>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      Configuration
+    </h2>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Blueshift API Key</label>
+        <input type="password" id="apiKey" placeholder="Paste your API key here" autocomplete="off" />
+        <div class="hint">Your Blueshift User API key (found in Account Settings)</div>
+      </div>
+
+      <div class="form-group">
+        <label>CSV File</label>
+        <div class="file-drop" id="fileDrop">
+          <input type="file" id="csvFile" accept=".csv" />
+          <div class="file-icon">📄</div>
+          <div class="file-label"><span>Choose a file</span> or drag & drop</div>
+          <div class="file-name" id="fileName"></div>
+        </div>
+        <div class="hint">CSV must include an <strong>email</strong> column. All other columns will be compared against Blueshift.</div>
+      </div>
+    </div>
+
+    <div class="error-banner" id="errorBanner"></div>
+
+    <div class="progress-bar-wrap" id="progressWrap">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="progress-label" id="progressLabel"></div>
+
+    <button class="btn" id="runBtn" onclick="runTest()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <span id="btnText">Run Test</span>
+      <div class="spinner" id="spinner"></div>
+    </button>
+  </div>
+
+  <div class="results-section" id="resultsSection">
+
+    <div class="summary" id="summary"></div>
+
+    <div id="customerResults"></div>
+
+  </div>
+
+</div>
+
+<script>
+  // File drop UI
+  const fileDrop = document.getElementById('fileDrop');
+  const csvFile = document.getElementById('csvFile');
+  const fileName = document.getElementById('fileName');
+
+  csvFile.addEventListener('change', () => {
+    fileName.textContent = csvFile.files[0] ? csvFile.files[0].name : '';
+  });
+
+  fileDrop.addEventListener('dragover', (e) => { e.preventDefault(); fileDrop.classList.add('drag-over'); });
+  fileDrop.addEventListener('dragleave', () => fileDrop.classList.remove('drag-over'));
+  fileDrop.addEventListener('drop', (e) => {
+    e.preventDefault();
+    fileDrop.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) {
+      csvFile.files = e.dataTransfer.files;
+      fileName.textContent = e.dataTransfer.files[0].name;
+    }
+  });
+
+  function showError(msg) {
+    const el = document.getElementById('errorBanner');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function hideError() {
+    document.getElementById('errorBanner').style.display = 'none';
+  }
+
+  function setLoading(loading) {
+    const btn = document.getElementById('runBtn');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btnText');
+    btn.disabled = loading;
+    spinner.style.display = loading ? 'block' : 'none';
+    btnText.textContent = loading ? 'Testing...' : 'Run Test';
+  }
+
+  async function runTest() {
+    hideError();
+    const apiKey = document.getElementById('apiKey').value.trim();
+    const file = document.getElementById('csvFile').files[0];
+
+    if (!apiKey) { showError('Please enter your Blueshift API key.'); return; }
+    if (!file) { showError('Please select a CSV file.'); return; }
+
+    setLoading(true);
+    document.getElementById('resultsSection').style.display = 'none';
+
+    const progressWrap = document.getElementById('progressWrap');
+    const progressBar = document.getElementById('progressBar');
+    const progressLabel = document.getElementById('progressLabel');
+    progressWrap.style.display = 'block';
+    progressLabel.style.display = 'block';
+    progressBar.style.width = '10%';
+    progressLabel.textContent = 'Uploading and processing...';
+
+    const formData = new FormData();
+    formData.append('apiKey', apiKey);
+    formData.append('csv', file);
+
+    try {
+      // Animate progress while waiting
+      let pct = 10;
+      const progressInterval = setInterval(() => {
+        pct = Math.min(pct + 3, 85);
+        progressBar.style.width = pct + '%';
+      }, 800);
+
+      const resp = await fetch('/api/test', { method: 'POST', body: formData });
+      clearInterval(progressInterval);
+      progressBar.style.width = '100%';
+      progressLabel.textContent = 'Done!';
+
+      const data = await resp.json();
+
+      if (!resp.ok) {
+        showError(data.error || 'Server error. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      renderResults(data);
+
+    } catch (err) {
+      showError('Network error: ' + err.message);
+    } finally {
+      setLoading(false);
+      setTimeout(() => {
+        progressWrap.style.display = 'none';
+        progressLabel.style.display = 'none';
+      }, 1500);
+    }
+  }
+
+  function renderResults(data) {
+    const { results, totalRows } = data;
+
+    // Stats
+    let totalFields = 0, matchedFields = 0, errorRows = 0, fullMatchRows = 0;
+    for (const r of results) {
+      if (r.error) { errorRows++; continue; }
+      totalFields += r.totalFields;
+      matchedFields += r.matchCount;
+      if (r.matchCount === r.totalFields) fullMatchRows++;
+    }
+
+    const summaryEl = document.getElementById('summary');
+    summaryEl.innerHTML = `
+      <div class="stat blue"><div class="value">${totalRows}</div><div class="label">Customers Tested</div></div>
+      <div class="stat green"><div class="value">${fullMatchRows}</div><div class="label">Full Matches</div></div>
+      <div class="stat orange"><div class="value">${results.length - errorRows - fullMatchRows}</div><div class="label">Has Mismatches</div></div>
+      <div class="stat red"><div class="value">${errorRows}</div><div class="label">Errors</div></div>
+      <div class="stat blue"><div class="value">${totalFields ? Math.round(matchedFields / totalFields * 100) : 0}%</div><div class="label">Field Match Rate</div></div>
+    `;
+
+    const container = document.getElementById('customerResults');
+    container.innerHTML = '';
+
+    for (const r of results) {
+      container.appendChild(buildCustomerBlock(r));
+    }
+
+    document.getElementById('resultsSection').style.display = 'block';
+    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  function buildCustomerBlock(r) {
+    const block = document.createElement('div');
+    block.className = 'customer-block';
+
+    let badgeHTML;
+    if (r.error) {
+      badgeHTML = `<span class="badge error">⚠ Error</span>`;
+    } else if (r.matchCount === r.totalFields) {
+      badgeHTML = `<span class="badge all-match">✓ All ${r.totalFields} fields match</span>`;
+    } else {
+      const mismatches = r.totalFields - r.matchCount;
+      badgeHTML = `<span class="badge has-mismatch">⚠ ${mismatches} mismatch${mismatches !== 1 ? 'es' : ''} / ${r.totalFields} fields</span>`;
+    }
+
+    const uuidHTML = r.uuid ? `<span class="customer-uuid">${r.uuid}</span>` : '';
+
+    block.innerHTML = `
+      <div class="customer-header" onclick="toggleBlock(this)">
+        <div class="customer-email">${escHtml(r.email)}</div>
+        ${uuidHTML}
+        ${badgeHTML}
+        <span class="chevron">▼</span>
+      </div>
+      <div class="customer-body">
+        ${r.error
+          ? `<div class="error-msg">⚠ ${escHtml(r.error)}</div>`
+          : buildTable(r.fields)
+        }
+      </div>
+    `;
+
+    // Auto-expand if there are mismatches or errors
+    if (r.error || (r.matchCount !== undefined && r.matchCount < r.totalFields)) {
+      block.classList.add('open');
+    }
+
+    return block;
+  }
+
+  function buildTable(fields) {
+    if (!fields || fields.length === 0) return '<div style="padding:16px;color:#888;font-size:0.88rem;">No fields to compare.</div>';
+
+    const rows = fields.map(f => `
+      <tr>
+        <td class="field-name">${escHtml(f.field)}</td>
+        <td>${escHtml(f.csvValue)}</td>
+        <td>${escHtml(f.apiValue)}</td>
+        <td class="${f.match ? 'match' : 'mismatch'}">
+          <span class="match-icon">${f.match ? '✓' : '✗'}</span>
+          ${f.match ? 'Match' : 'Mismatch'}
+        </td>
+      </tr>
+    `).join('');
+
+    return `
+      <table>
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>CSV Value</th>
+            <th>API Value</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function toggleBlock(header) {
+    header.closest('.customer-block').classList.toggle('open');
+  }
+
+  function escHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+</script>
+</body>
+</html>
