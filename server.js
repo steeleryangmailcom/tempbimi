@@ -10,7 +10,129 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Helper: make HTTPS request to Blueshift API
+// ─── Field name mapping: CSV column → Blueshift API field ───────────────────
+//
+// CSV uses UPPERCASE_SNAKE. Blueshift top-level fields are lowercase_snake.
+// Custom attributes live under customer_attributes{} and are also lowercase.
+// Entries here override the default "lowercase the CSV key" rule.
+//
+const FIELD_MAP = {
+  GENERAL_EMAIL:                    'email',
+  GENERAL_PHONE:                    'phone_number',
+  MARKETING_PHONE:                  'marketing_phone',
+  REWARDS_MARKETING_PHONE:          'rewards_marketing_phone',
+  FIRSTNAME:                        'firstname',
+  LASTNAME:                         'lastname',
+  GENDER:                           'gender',
+  ADDRESS_LINE1:                    'address_line_1',
+  ADDRESS_LINE2:                    'address_line_2',
+  ADDRESS_CITY:                     'city',
+  ADDRESS_STATE:                    'state',
+  ADDRESS_POSTAL_CODE:              'zip_code',
+  BIRTHDATE:                        'birthdate',
+  JOINED_AT:                        'joined_at',
+  CREATED_AT_GOLD:                  'created_at',
+  UPDATED_AT_GOLD:                  'updated_at',
+};
+
+// Columns to skip in comparison (used only for lookup, not meaningful to compare)
+const SKIP_COLS = new Set(['GENERAL_EMAIL']);
+
+// ─── Detect email column ──────────────────────────────────────────────────────
+// Prefer GENERAL_EMAIL, then any column whose name contains "email"
+function detectEmailCol(headers) {
+  return (
+    headers.find(h => h === 'GENERAL_EMAIL') ||
+    headers.find(h => h.toLowerCase() === 'email') ||
+    headers.find(h => h.toLowerCase().includes('email'))
+  );
+}
+
+// ─── Map a CSV column name to the Blueshift field name to look up ─────────────
+function toBlueshiftKey(csvCol) {
+  return FIELD_MAP[csvCol] || csvCol.toLowerCase();
+}
+
+// ─── Recursively find a key in a nested JSON object ──────────────────────────
+// Searches: top-level, customer_attributes{}, then any other nested object.
+function findValue(obj, key) {
+  if (!obj || typeof obj !== 'object') return undefined;
+
+  const lower = key.toLowerCase();
+
+  // 1. Top-level exact (case-insensitive)
+  for (const [k, v] of Object.entries(obj)) {
+    if (k.toLowerCase() === lower) return v;
+  }
+
+  // 2. customer_attributes first (preferred for custom fields)
+  if (obj.customer_attributes && typeof obj.customer_attributes === 'object') {
+    for (const [k, v] of Object.entries(obj.customer_attributes)) {
+      if (k.toLowerCase() === lower) return v;
+    }
+  }
+
+  // 3. Any other nested object (max depth 3)
+  function recurse(node, depth) {
+    if (!node || typeof node !== 'object' || depth > 3) return undefined;
+    for (const [k, v] of Object.entries(node)) {
+      if (k === 'customer_attributes') continue; // already checked
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        for (const [nk, nv] of Object.entries(v)) {
+          if (nk.toLowerCase() === lower) return nv;
+        }
+        const deeper = recurse(v, depth + 1);
+        if (deeper !== undefined) return deeper;
+      }
+    }
+    return undefined;
+  }
+
+  return recurse(obj, 0);
+}
+
+// ─── Value normalization for comparison ──────────────────────────────────────
+function normalizeValue(val) {
+  if (val === undefined || val === null) return '';
+  const str = String(val).trim();
+  if (str === '') return '';
+
+  // Booleans (CSV may have TRUE/FALSE, API may have true/false or 1/0)
+  const low = str.toLowerCase();
+  if (low === 'true' || low === '1') return 'true';
+  if (low === 'false' || low === '0') return 'false';
+
+  return str;
+}
+
+// ─── Compare CSV row fields against Blueshift customer JSON ──────────────────
+function compareFields(csvRow, customerData) {
+  const results = [];
+
+  for (const csvCol of Object.keys(csvRow)) {
+    if (SKIP_COLS.has(csvCol)) continue;
+
+    const csvRaw = csvRow[csvCol];
+    const bsKey  = toBlueshiftKey(csvCol);
+    const apiRaw = findValue(customerData, bsKey);
+
+    const csvNorm = normalizeValue(csvRaw);
+    const apiNorm = normalizeValue(apiRaw);
+    const match   = csvNorm === apiNorm;
+
+    results.push({
+      field:    csvCol,
+      bsKey,                                          // what we looked up in the API
+      csvValue: csvRaw === '' || csvRaw == null ? '' : csvRaw,
+      apiValue: apiRaw === undefined ? null : apiRaw, // null = not found, '' = empty
+      match,
+    });
+  }
+
+  return results;
+}
+
+// ─── Blueshift API helper ─────────────────────────────────────────────────────
 function blueshiftRequest(apiKey, urlPath) {
   return new Promise((resolve, reject) => {
     const options = {
@@ -40,72 +162,15 @@ function blueshiftRequest(apiKey, urlPath) {
     });
 
     req.on('error', reject);
-    req.setTimeout(15000, () => {
-      req.destroy(new Error('Request timed out'));
-    });
+    req.setTimeout(15000, () => req.destroy(new Error('Request timed out')));
     req.end();
   });
 }
 
-// Compare a flat CSV row against a nested customer JSON object
-function compareFields(csvRow, customerData) {
-  const results = [];
-
-  for (const [csvKey, csvValue] of Object.entries(csvRow)) {
-    if (csvKey.toLowerCase() === 'email') continue; // used as lookup key, skip
-
-    // Try to find the value in customer JSON (top-level or inside nested objects)
-    const apiValue = findValue(customerData, csvKey);
-
-    const csvNorm = normalizeValue(csvValue);
-    const apiNorm = normalizeValue(apiValue);
-    const match = csvNorm === apiNorm;
-
-    results.push({
-      field: csvKey,
-      csvValue: csvValue === '' || csvValue === null || csvValue === undefined ? '(empty)' : csvValue,
-      apiValue: apiValue === undefined ? '(not found)' : (apiValue === null || apiValue === '' ? '(empty)' : String(apiValue)),
-      match,
-    });
-  }
-
-  return results;
-}
-
-// Recursively search for a key in a nested object (case-insensitive)
-function findValue(obj, key, depth = 0) {
-  if (!obj || typeof obj !== 'object' || depth > 5) return undefined;
-
-  const lowerKey = key.toLowerCase();
-
-  for (const [k, v] of Object.entries(obj)) {
-    if (k.toLowerCase() === lowerKey) return v;
-  }
-
-  // Check nested objects (but not arrays of objects to keep it predictable)
-  for (const [, v] of Object.entries(obj)) {
-    if (v && typeof v === 'object' && !Array.isArray(v)) {
-      const found = findValue(v, key, depth + 1);
-      if (found !== undefined) return found;
-    }
-  }
-
-  return undefined;
-}
-
-function normalizeValue(val) {
-  if (val === undefined || val === null || val === '') return '';
-  const str = String(val).trim();
-  // Normalize booleans
-  if (str.toLowerCase() === 'true') return 'true';
-  if (str.toLowerCase() === 'false') return 'false';
-  return str;
-}
-
-// POST /api/test — accepts CSV + API key, returns comparison results
+// ─── POST /api/test ───────────────────────────────────────────────────────────
 app.post('/api/test', upload.single('csv'), async (req, res) => {
   const apiKey = req.body.apiKey;
-  if (!apiKey) return res.status(400).json({ error: 'API key is required' });
+  if (!apiKey)   return res.status(400).json({ error: 'API key is required' });
   if (!req.file) return res.status(400).json({ error: 'CSV file is required' });
 
   let rows;
@@ -121,28 +186,30 @@ app.post('/api/test', upload.single('csv'), async (req, res) => {
 
   if (rows.length === 0) return res.status(400).json({ error: 'CSV file is empty' });
 
-  // Detect email column (case-insensitive)
-  const headers = Object.keys(rows[0]);
-  const emailCol = headers.find(h => h.toLowerCase() === 'email');
-  if (!emailCol) return res.status(400).json({ error: 'CSV must contain an "email" column' });
+  const headers  = Object.keys(rows[0]);
+  const emailCol = detectEmailCol(headers);
+  if (!emailCol) {
+    return res.status(400).json({
+      error: 'Could not find an email column. Expected GENERAL_EMAIL or a column containing "email".',
+    });
+  }
 
   const results = [];
 
   for (const row of rows) {
     const email = row[emailCol];
     if (!email) {
-      results.push({ email: '(missing)', error: 'No email in row', fields: [] });
+      results.push({ email: '(missing)', error: 'No email value in row', fields: [] });
       continue;
     }
 
     try {
-      // Step 1: Search for customer by email
+      // Step 1: search by email → get UUID
       const searchResult = await blueshiftRequest(
         apiKey,
         '/api/v1/customers?email=' + encodeURIComponent(email)
       );
 
-      // Blueshift returns { customers: [...] } or directly an array
       const customers = searchResult.customers || (Array.isArray(searchResult) ? searchResult : null);
       if (!customers || customers.length === 0) {
         results.push({ email, error: 'Customer not found in Blueshift', fields: [] });
@@ -151,25 +218,37 @@ app.post('/api/test', upload.single('csv'), async (req, res) => {
 
       const uuid = customers[0].uuid || customers[0].id;
       if (!uuid) {
-        results.push({ email, error: 'No UUID returned for customer', fields: [] });
+        results.push({ email, error: 'No UUID in search response', fields: [] });
         continue;
       }
 
-      // Step 2: Get full customer details by UUID
+      // Step 2: fetch full customer record
       const customerData = await blueshiftRequest(apiKey, '/api/v1/customers/' + uuid);
 
-      // Step 3: Compare fields
-      const fields = compareFields(row, customerData);
+      // Step 3: compare
+      const fields     = compareFields(row, customerData);
       const matchCount = fields.filter(f => f.match).length;
-      results.push({ email, uuid, fields, matchCount, totalFields: fields.length });
+
+      results.push({
+        email,
+        uuid,
+        fields,
+        matchCount,
+        totalFields: fields.length,
+        rawApiResponse: customerData,   // sent to client for the "View Raw" panel
+      });
 
     } catch (err) {
       results.push({ email, error: err.message, fields: [] });
     }
   }
 
-  res.json({ results, totalRows: rows.length });
+  res.json({ results, totalRows: rows.length, emailCol });
 });
+
+// ─── GET /api/field-map ───────────────────────────────────────────────────────
+// Let the UI display the current mapping
+app.get('/api/field-map', (_, res) => res.json(FIELD_MAP));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
