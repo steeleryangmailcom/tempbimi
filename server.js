@@ -133,10 +133,10 @@ function compareFields(csvRow, customerData) {
 }
 
 // ─── Blueshift API helper ─────────────────────────────────────────────────────
-function blueshiftRequest(apiKey, urlPath) {
+function blueshiftRequest(apiKey, urlPath, hostname = 'api.getblueshift.com') {
   return new Promise((resolve, reject) => {
     const options = {
-      hostname: 'api.getblueshift.com',
+      hostname,
       path: urlPath,
       method: 'GET',
       headers: {
@@ -170,6 +170,7 @@ function blueshiftRequest(apiKey, urlPath) {
 // ─── POST /api/test ───────────────────────────────────────────────────────────
 app.post('/api/test', upload.single('csv'), async (req, res) => {
   const apiKey = req.body.apiKey;
+  const region = req.body.region || 'api.getblueshift.com';
   if (!apiKey)   return res.status(400).json({ error: 'API key is required' });
   if (!req.file) return res.status(400).json({ error: 'CSV file is required' });
 
@@ -207,7 +208,8 @@ app.post('/api/test', upload.single('csv'), async (req, res) => {
       // Step 1: search by email → get UUID
       const searchResult = await blueshiftRequest(
         apiKey,
-        '/api/v1/customers?email=' + encodeURIComponent(email)
+        '/api/v1/customers?email=' + encodeURIComponent(email),
+        region
       );
 
       const customers = searchResult.customers || (Array.isArray(searchResult) ? searchResult : null);
@@ -223,7 +225,7 @@ app.post('/api/test', upload.single('csv'), async (req, res) => {
       }
 
       // Step 2: fetch full customer record
-      const customerData = await blueshiftRequest(apiKey, '/api/v1/customers/' + uuid);
+      const customerData = await blueshiftRequest(apiKey, '/api/v1/customers/' + uuid, region);
 
       // Step 3: compare
       const fields     = compareFields(row, customerData);

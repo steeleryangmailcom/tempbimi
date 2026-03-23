@@ -40,7 +40,8 @@
       color: #16213e; display: flex; align-items: center; gap: 8px;
     }
 
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+    @media (max-width: 900px) { .form-grid { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 640px) { .form-grid { grid-template-columns: 1fr; } }
 
     .form-group { display: flex; flex-direction: column; gap: 6px; }
@@ -219,6 +220,15 @@
       </div>
 
       <div class="form-group">
+        <label>Region / Data Center</label>
+        <select id="region" style="border:1.5px solid #dde1ea;border-radius:8px;padding:10px 14px;font-size:0.92rem;outline:none;width:100%;background:white;color:#1a1a2e;">
+          <option value="api.getblueshift.com">Standard (api.getblueshift.com)</option>
+          <option value="api.eu.getblueshift.com">EU (api.eu.getblueshift.com)</option>
+        </select>
+        <div class="hint">Match the region your Blueshift account is hosted in</div>
+      </div>
+
+      <div class="form-group">
         <label>CSV File</label>
         <div class="file-drop" id="fileDrop">
           <input type="file" id="csvFile" accept=".csv" />
@@ -295,6 +305,7 @@
   async function runTest() {
     hideError();
     const apiKey = document.getElementById('apiKey').value.trim();
+    const region = document.getElementById('region').value.trim();
     const file   = csvFile.files[0];
     if (!apiKey) { showError('Please enter your Blueshift API key.'); return; }
     if (!file)   { showError('Please select a CSV file.'); return; }
@@ -315,6 +326,7 @@
 
     const fd = new FormData();
     fd.append('apiKey', apiKey);
+    fd.append('region', region);
     fd.append('csv', file);
 
     try {
